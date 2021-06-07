@@ -14,6 +14,9 @@ public class Hole  implements Cloneable {
 	public void removeSeeds() {
 		seeds = 0 ;
 	}
+	public void setSeeds(int seeds) {
+		this.seeds = seeds;
+	}
 	
 	public int retrieveSeeds() {
 		int nbRetrievedSeeds = this.seeds; 

@@ -18,8 +18,9 @@ public class SimplePlayer implements Runnable{
 	private int playerNumber;
 	private int startIndexArea;
 	private int endIndexArea;
-	public boolean isBlocked;
-	
+	private boolean isBlocked;
+	private int score;
+
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
 		this.granary = new Granary(0);
@@ -33,32 +34,10 @@ public class SimplePlayer implements Runnable{
 			startIndexArea = 6;
 			endIndexArea = 11;
 		}
+		
+		this.score = 0;
 
 		System.out.println("Ce joueur sera le joueur numéro " +this.playerNumber);
-	}
-
-	public Board getBoard() {
-		return board;
-	}
-
-	public void setBoard(Board board) {
-		this.board = board;
-	}
-
-	public Socket getSocket() {
-		return socket;
-	}
-
-	public void setSocket(Socket socket) {
-		this.socket = socket;
-	}
-	
-	public String getJSONString(Board b) {
-		jsonConverter jsonDataBuilder = new jsonConverter(b);
-		
-		Gson gson = new Gson();
-		String json = gson.toJson(jsonDataBuilder); 
-		return json;
 	}
 
 	@Override
@@ -68,58 +47,12 @@ public class SimplePlayer implements Runnable{
 				
 				Scanner in = new Scanner(socket.getInputStream());
 				PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
-				
 				String input = in.next();
 				System.out.println(input);
-				ClientInputController request = new ClientInputController(input);
 				System.out.println("Player "+this.playerNumber+" is playing");
-				System.out.println("\tActual board :\n\t"+ this.getJSONString(this.getBoard()));
-	    	 	try {
-	    	 		if (request.isDifficultyChoice()) {
-	    	 			if (request.isBeginnerDifficulty()) {
-	    	 				this.getBoard().setBeginnerDifficulty(true);
-	    	 			}
-	    	 		}
-	    	 		
-	    	 		if (request.isAMove()){
-	    	 			this.LastMove = board.clone();
-	    	 			playAMove(request.getHoleIndexPlayed());
-	    	 			System.out.println("lastMove "+ getJSONString(this.LastMove));
-	    	 			out.println(getJSONString(this.getBoard()));
-	    	 			continue;
-	    	 		}
-	    	 		
-	    	 		if (request.isAConfirmation()) {
-	    	 			if (request.getConfirmationAction().equals("abort")) {
-	    	 				this.board = LastMove.clone();
-	    	 				System.out.println("Aborting the move... Returning to"+ getJSONString(this.LastMove));
-		    	 			out.println(getJSONString(this.board));	
-		    	 			continue;
-	    	 			}
-	    	 		}
-	    	 		
-					if (this.hasWon()) {
-						this.getBoard().broadcastMsg("Le jouer "+this.playerNumber+" a gagné");
-		    	 	}
-					
-					if (this.getBoard().isNullGame()) {
-						this.getBoard().broadcastMsg("Match nul");
-					}
-					
-					this.getBoard().broadcastMsg(getJSONString(this.getBoard()));
-					if (this.playerNumber == 1) {
-						this.getBoard().getPlayerTwo().isBlocked = false;
-						
-					}else {
-						this.getBoard().getPlayerOne().isBlocked = false;
-					}
-					this.isBlocked = true;
-					
-				} catch (UnplayableHoleException | NotYourTurnException e) {
-					out.println(e.getMessage());
-					System.out.println(e.getMessage());
-				}
+				//System.out.println("\tActual board :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
 	    	 	
+	    	 	this.getBoard().handleATurn(this, input, out);
 	    	 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -128,13 +61,13 @@ public class SimplePlayer implements Runnable{
 				this.getBoard().informEnemyOfDisconnection(playerNumber);
 				break;
 			}
-			System.out.println("\tBoard after playing :\n\t"+ this.getJSONString(this.getBoard()));
+			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
 			
 		}
 		
 	}
 	
-	private void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException {
+	public void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException {
 		String errMsg;
 		if (this.isBlocked) {
 			errMsg = "ERR: it's not your turn";
@@ -208,7 +141,7 @@ public class SimplePlayer implements Runnable{
 		return false;
 	}
 	
-	private boolean hasWon() {
+	public boolean hasWon() {
 		if (!this.getBoard().isBeginnerDifficulty()) {
 			return this.getBoard().getSeeds() <= 6 && this.getSeedsInArea() == 0;
 		}
@@ -217,21 +150,6 @@ public class SimplePlayer implements Runnable{
 	
 	private boolean isInArea(int holeIndex) {
 		return this.startIndexArea <= holeIndex && this.endIndexArea >= holeIndex;
-	}
-	
-	private class jsonConverter {
-		private ArrayList<Object> seeds;
-		private int playerOneGranaryCount;
-		private int playerTwoGranaryCount;
-		
-		public jsonConverter(Board board) {
-			seeds = new ArrayList<>();
-			for (Hole hole : board.getHoles()) {
-				seeds.add(hole.getSeeds());
-			}
-			playerOneGranaryCount = board.getPlayerOne().getGranary().getSeeds();
-			playerTwoGranaryCount = board.getPlayerTwo().getGranary().getSeeds();
-		}
 	}
 	
 	public int getSeedsInArea() {
@@ -245,6 +163,74 @@ public class SimplePlayer implements Runnable{
 	
 	public Granary getGranary() {
 		return this.granary;
+	}
+	
+	public Board getLastMove() {
+		return LastMove;
+	}
+
+	public void setLastMove(Board lastMove) {
+		LastMove = lastMove;
+	}
+	
+	public int getPlayerNumber() {
+		return playerNumber;
+	}
+
+	public void setPlayerNumber(int playerNumber) {
+		this.playerNumber = playerNumber;
+	}
+
+	public int getStartIndexArea() {
+		return startIndexArea;
+	}
+
+	public void setStartIndexArea(int startIndexArea) {
+		this.startIndexArea = startIndexArea;
+	}
+
+	public int getEndIndexArea() {
+		return endIndexArea;
+	}
+
+	public void setEndIndexArea(int endIndexArea) {
+		this.endIndexArea = endIndexArea;
+	}
+
+	public boolean isBlocked() {
+		return isBlocked;
+	}
+
+	public void setBlocked(boolean isBlocked) {
+		this.isBlocked = isBlocked;
+	}
+
+	public void setGranary(Granary granary) {
+		this.granary = granary;
+	}
+	
+	public Board getBoard() {
+		return board;
+	}
+
+	public void setBoard(Board board) {
+		this.board = board;
+	}
+
+	public Socket getSocket() {
+		return socket;
+	}
+
+	public void setSocket(Socket socket) {
+		this.socket = socket;
+	}
+	
+	public int getScore() {
+		return score;
+	}
+	
+	public void addPointToScore() {
+		this.score++;
 	}
 
 }

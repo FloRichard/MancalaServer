@@ -11,37 +11,105 @@ public class Board implements Cloneable{
 	private SimplePlayer playerOne;
 	private SimplePlayer playerTwo;
 	private boolean isBeginnerDifficulty;
+	private int numberOfRoundPlayed;
 
+	public Board(ArrayList<Hole> holes) {
+		this.holes = holes;
+		this.numberOfRoundPlayed = 0;
+		this.isBeginnerDifficulty = true; // default difficulty
+	}
+	
 	public int setPlayer(SimplePlayer player) {
 		if (playerOne == null) {
 			this.playerOne = player;
-			this.playerOne.isBlocked = false;
+			this.playerOne.setBlocked(false);
 			return 1;
 		}else {
 			this.playerTwo = player;
-			this.playerTwo.isBlocked = true;
+			this.playerTwo.setBlocked(true);
 			return 2;
 		}
 	}
 	
-	public Board clone() {
-		ArrayList<Hole> clonedHoles = new ArrayList<Hole>();
-		for(int i=0; i < this.getHoles().size(); i++) {
-			Hole clonedHole = this.getHoles().get(i).clone();
-			clonedHoles.add(clonedHole);
+	public void handleATurn(SimplePlayer player, String input, PrintWriter out) {
+		ClientInputController request = new ClientInputController(input);
+		if (request.isLoading()) {
+			System.out.println("Loading a board...");
+			this.loadFromRequest(request);
+			this.broadcastMsg(getBoardToJSONString(this));
+			System.out.println("Board loaded !");
+			return;
 		}
-				
-		Board clonedBoard = null;
-        try {	
-        	clonedBoard = (Board) super.clone();
 		
-		} catch (CloneNotSupportedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (request.isDifficultyChoice()) {
+ 			if (request.isBeginnerDifficulty()) {
+ 				this.setBeginnerDifficulty(true);
+ 			}
+ 			return;
+ 		}
+		
+		if (request.isAMove()){
+ 			player.setLastMove(this.clone());
+ 			try {
+				player.playAMove(request.getHoleIndexPlayed());
+			} catch (UnplayableHoleException | NotYourTurnException e) {
+				out.println(e.getMessage());
+				System.out.println(e.getMessage());
+				return;
+			}
+ 			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove()));
+ 			out.println(getBoardToJSONString(this));
+ 			return;
+ 		}
+		
+		if (request.isAConfirmation()) {
+ 			if (request.getConfirmationAction().equals("abort")) {
+ 				player.setBoard(player.getLastMove().clone());
+ 				System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove()));
+	 			out.println(getBoardToJSONString(this));	
+	 			return;
+ 			}
+ 		}
+		
+		if (player.hasWon()) {
+			this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
+			player.addPointToScore();
+			this.addARound();
+			if (this.getNumberOfRoundPlayed() == 6) {
+				gameOver(player.getPlayerNumber());
+				return;
+			}
+	 	}
+		
+		if (this.isNullGame()) {
+			this.broadcastMsg("Match nul");
 		}
-        clonedBoard.setHoles(clonedHoles);
-        return clonedBoard;
-    }
+		
+		this.broadcastMsg(getBoardToJSONString(this));
+		
+		if (player.getPlayerNumber() == 1) {
+			this.getPlayerTwo().setBlocked(false);
+		}else {
+			this.getPlayerOne().setBlocked(false);
+		}
+		
+		player.setBlocked(true);
+	}
+	
+	public void loadFromRequest(ClientInputController request){
+		for (int i = 0; i<this.getHoles().size(); i++) {
+			this.getHoles().get(i).setSeeds(request.getJsonBoardToLoad()[i]);
+		}
+		this.playerOne.getGranary().setSeeds(request.getP1Granary());
+		this.playerTwo.getGranary().setSeeds(request.getP2Granary());
+		if (request.isPlayer1Turn()) {
+			this.getPlayerOne().setBlocked(false);
+			this.getPlayerTwo().setBlocked(true);
+		}else {
+			this.getPlayerOne().setBlocked(true);
+			this.getPlayerTwo().setBlocked(false);
+		}
+	}
 	
 	public int distribute(int holeIndex) {
 		int nbSeeds = this.getHoles().get(holeIndex).getSeeds();
@@ -97,6 +165,43 @@ public class Board implements Cloneable{
 		return false;
 	}
 	
+	public void gameOver(int playerNumber) {
+		String outputMessagePlayerOne = null;
+		String outputMessagePlayerTwo = null;
+		PrintWriter outOne = null;
+		PrintWriter outTwo = null;
+		try {
+			outOne = new PrintWriter(this.getPlayerOne().getSocket().getOutputStream(), true);
+			outTwo = new PrintWriter(this.getPlayerTwo().getSocket().getOutputStream(), true);
+		} catch (IOException e) {
+			System.err.println("Can't get output streams");
+			e.printStackTrace();
+		}
+		
+		if (playerNumber == this.getPlayerOne().getPlayerNumber()) {
+			if (getPlayerOne().getScore() > 3) {
+				outputMessagePlayerOne = getGameWinJSONString();
+				outputMessagePlayerTwo = getGameLoseJSONString();
+			}else if (getPlayerOne().getScore() == 3) {
+				outputMessagePlayerOne = getGameNullJSONString();
+				outputMessagePlayerTwo = getGameNullJSONString();
+			}else {
+				outputMessagePlayerOne = getGameLoseJSONString();
+				outputMessagePlayerTwo = getGameWinJSONString();
+			}
+		}else {
+			if (getPlayerTwo().getScore() > 3) {
+				outputMessagePlayerTwo = getGameWinJSONString();
+			}else if (getPlayerTwo().getScore() == 3) {
+				outputMessagePlayerTwo = getGameNullJSONString();
+			}else {
+				outputMessagePlayerTwo = getGameLoseJSONString();
+			}
+		}
+		outOne.println(outputMessagePlayerOne);
+		outTwo.println(outputMessagePlayerTwo);
+	}
+	
 	public int getSeeds() {
 		int nbSeed = 0;
 		for (Hole hole : holes) {
@@ -105,9 +210,32 @@ public class Board implements Cloneable{
 		return nbSeed;
 	}
 	
+	public static String getBoardToJSONString(Board b) {
+		String JSONHoles = "[";
+		for (int i = 0; i< b.getHoles().size();i++) {
+			JSONHoles += b.getHoles().get(i).getSeeds();
+			if (i < b.getHoles().size() -1) {
+				JSONHoles += ",";
+			}
+		}
+		JSONHoles += "]";
+		
+		String boardJSON = "{\"seeds\":"+JSONHoles+
+				",\"playerOneGranaryCount\":"+b.getPlayerOne().getGranary().getSeeds()+
+				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"} ";
+		return boardJSON;
+	}
 	
-	public Board(ArrayList<Hole> holes) {
-		this.holes = holes;
+	public String getGameWinJSONString() {
+		return "{\"info\":\"win\"}";
+	}
+	
+	public String getGameLoseJSONString() {
+		return "{\"info\":\"lose\"}";
+	}
+	
+	public String getGameNullJSONString() {
+		return "{\"info\":\"null\"}";
 	}
 	
 	public ArrayList<Hole> getHoles() {
@@ -138,5 +266,32 @@ public class Board implements Cloneable{
 	public void setBeginnerDifficulty(boolean isBeginnerDifficulty) {
 		this.isBeginnerDifficulty = isBeginnerDifficulty;
 	}
+	
+	public int getNumberOfRoundPlayed() {
+		return numberOfRoundPlayed;
+	}
+
+	public void addARound() {
+		this.numberOfRoundPlayed++;
+	}
+	
+	public Board clone() {
+		ArrayList<Hole> clonedHoles = new ArrayList<Hole>();
+		for(int i=0; i < this.getHoles().size(); i++) {
+			Hole clonedHole = this.getHoles().get(i).clone();
+			clonedHoles.add(clonedHole);
+		}
+				
+		Board clonedBoard = null;
+        try {	
+        	clonedBoard = (Board) super.clone();
+		
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        clonedBoard.setHoles(clonedHoles);
+        return clonedBoard;
+    }
 
 }
