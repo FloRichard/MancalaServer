@@ -7,11 +7,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.undo.CannotUndoException;
-
 import com.google.gson.Gson;
-
-import model.ClientInputController.obj;
 
 
 public class SimplePlayer implements Runnable{
@@ -57,8 +53,8 @@ public class SimplePlayer implements Runnable{
 		this.socket = socket;
 	}
 	
-	public String getJSONString() {
-		jsonConverter jsonDataBuilder = new jsonConverter(this.getBoard());
+	public String getJSONString(Board b) {
+		jsonConverter jsonDataBuilder = new jsonConverter(b);
 		
 		Gson gson = new Gson();
 		String json = gson.toJson(jsonDataBuilder); 
@@ -72,17 +68,45 @@ public class SimplePlayer implements Runnable{
 				
 				Scanner in = new Scanner(socket.getInputStream());
 				PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
-				int index = Integer.parseInt(in.next());
+				
+				String input = in.next();
+				System.out.println(input);
+				ClientInputController request = new ClientInputController(input);
 				System.out.println("Player "+this.playerNumber+" is playing");
-				System.out.println("\tActual board :\n\t"+ this.getJSONString());
+				System.out.println("\tActual board :\n\t"+ this.getJSONString(this.getBoard()));
 	    	 	try {
+	    	 		if (request.isDifficultyChoice()) {
+	    	 			if (request.isBeginnerDifficulty()) {
+	    	 				this.getBoard().setBeginnerDifficulty(true);
+	    	 			}
+	    	 		}
 	    	 		
-	    	 		playAMove(index);
+	    	 		if (request.isAMove()){
+	    	 			this.LastMove = board.clone();
+	    	 			playAMove(request.getHoleIndexPlayed());
+	    	 			System.out.println("lastMove "+ getJSONString(this.LastMove));
+	    	 			out.println(getJSONString(this.getBoard()));
+	    	 			continue;
+	    	 		}
+	    	 		
+	    	 		if (request.isAConfirmation()) {
+	    	 			if (request.getConfirmationAction().equals("abort")) {
+	    	 				this.board = LastMove.clone();
+	    	 				System.out.println("Aborting the move... Returning to"+ getJSONString(this.LastMove));
+		    	 			out.println(getJSONString(this.board));	
+		    	 			continue;
+	    	 			}
+	    	 		}
 	    	 		
 					if (this.hasWon()) {
 						this.getBoard().broadcastMsg("Le jouer "+this.playerNumber+" a gagné");
 		    	 	}
-					this.getBoard().broadcastMsg(getJSONString());
+					
+					if (this.getBoard().isNullGame()) {
+						this.getBoard().broadcastMsg("Match nul");
+					}
+					
+					this.getBoard().broadcastMsg(getJSONString(this.getBoard()));
 					if (this.playerNumber == 1) {
 						this.getBoard().getPlayerTwo().isBlocked = false;
 						
@@ -90,6 +114,7 @@ public class SimplePlayer implements Runnable{
 						this.getBoard().getPlayerOne().isBlocked = false;
 					}
 					this.isBlocked = true;
+					
 				} catch (UnplayableHoleException | NotYourTurnException e) {
 					out.println(e.getMessage());
 					System.out.println(e.getMessage());
@@ -103,7 +128,7 @@ public class SimplePlayer implements Runnable{
 				this.getBoard().informEnemyOfDisconnection(playerNumber);
 				break;
 			}
-			System.out.println("\tBoard after playing :\n\t"+ this.getJSONString());
+			System.out.println("\tBoard after playing :\n\t"+ this.getJSONString(this.getBoard()));
 			
 		}
 		
@@ -184,6 +209,9 @@ public class SimplePlayer implements Runnable{
 	}
 	
 	private boolean hasWon() {
+		if (!this.getBoard().isBeginnerDifficulty()) {
+			return this.getBoard().getSeeds() <= 6 && this.getSeedsInArea() == 0;
+		}
 		return this.granary.getSeeds() >= 25;
 	}
 	
@@ -204,6 +232,15 @@ public class SimplePlayer implements Runnable{
 			playerOneGranaryCount = board.getPlayerOne().getGranary().getSeeds();
 			playerTwoGranaryCount = board.getPlayerTwo().getGranary().getSeeds();
 		}
+	}
+	
+	public int getSeedsInArea() {
+		int nbSeedsInArea = 0;
+		for(int i=this.startIndexArea; i<=this.endIndexArea; i++) {
+			nbSeedsInArea += this.getBoard().getHoles().get(i).getSeeds();
+		}
+		
+		return nbSeedsInArea;
 	}
 	
 	public Granary getGranary() {

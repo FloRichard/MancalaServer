@@ -6,40 +6,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class Board implements Serializable ,Cloneable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+public class Board implements Cloneable{
 	private ArrayList<Hole> holes;
 	private SimplePlayer playerOne;
 	private SimplePlayer playerTwo;
-	
-	public Board(ArrayList<Hole> holes) {
-		this.holes = holes;
-	}
-	
-	public ArrayList<Hole> getHoles() {
-		return holes;
-	}
-	public void setHoles(ArrayList<Hole> holes) {
-		this.holes = holes;
-	}
-	
-	public SimplePlayer getPlayerOne() {
-		return playerOne;
-	}
-	public void setPlayerOne(SimplePlayer playerOne) {
-		this.playerOne = playerOne;
-	}
-	
-	public SimplePlayer getPlayerTwo() {
-		return playerTwo;
-	}
-	public void setPlayerTwo(SimplePlayer playerTwo) {
-		this.playerTwo = playerTwo;
-	}
-	
+	private boolean isBeginnerDifficulty;
+
 	public int setPlayer(SimplePlayer player) {
 		if (playerOne == null) {
 			this.playerOne = player;
@@ -53,14 +25,21 @@ public class Board implements Serializable ,Cloneable{
 	}
 	
 	public Board clone() {
+		ArrayList<Hole> clonedHoles = new ArrayList<Hole>();
+		for(int i=0; i < this.getHoles().size(); i++) {
+			Hole clonedHole = this.getHoles().get(i).clone();
+			clonedHoles.add(clonedHole);
+		}
+				
 		Board clonedBoard = null;
-        try {
-			
-			clonedBoard = (Board) super.clone();
+        try {	
+        	clonedBoard = (Board) super.clone();
+		
 		} catch (CloneNotSupportedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+        clonedBoard.setHoles(clonedHoles);
         return clonedBoard;
     }
 	
@@ -109,6 +88,55 @@ public class Board implements Serializable ,Cloneable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public boolean isNullGame() {
+		if (this.getSeeds() < 6) {
+			return this.getPlayerOne().getGranary().getSeeds() <= 24  && this.getPlayerTwo().getGranary().getSeeds() <= 24;
+		}
+		return false;
+	}
+	
+	public int getSeeds() {
+		int nbSeed = 0;
+		for (Hole hole : holes) {
+			nbSeed += hole.getSeeds();
+		}
+		return nbSeed;
+	}
+	
+	
+	public Board(ArrayList<Hole> holes) {
+		this.holes = holes;
+	}
+	
+	public ArrayList<Hole> getHoles() {
+		return holes;
+	}
+	public void setHoles(ArrayList<Hole> holes) {
+		this.holes = holes;
+	}
+	
+	public SimplePlayer getPlayerOne() {
+		return playerOne;
+	}
+	public void setPlayerOne(SimplePlayer playerOne) {
+		this.playerOne = playerOne;
+	}
+	
+	public SimplePlayer getPlayerTwo() {
+		return playerTwo;
+	}
+	public void setPlayerTwo(SimplePlayer playerTwo) {
+		this.playerTwo = playerTwo;
+	}
+	
+	public boolean isBeginnerDifficulty() {
+		return isBeginnerDifficulty;
+	}
+
+	public void setBeginnerDifficulty(boolean isBeginnerDifficulty) {
+		this.isBeginnerDifficulty = isBeginnerDifficulty;
 	}
 
 }

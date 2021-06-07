@@ -1,6 +1,6 @@
 package model;
 
-public class Hole {
+public class Hole  implements Cloneable {
 	private int seeds;
 	
 	public Hole(int seeds) {
@@ -33,4 +33,16 @@ public class Hole {
 	public boolean isRetrievable() {
 		return this.seeds == 2 || this.seeds == 3;
 	}
+	
+	public Hole clone() {
+		Hole clonedHole = null;
+        try {
+			
+			clonedHole = (Hole) super.clone();
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return clonedHole;
+    }
 }
