@@ -67,7 +67,7 @@ public class SimplePlayer implements Runnable{
 		
 	}
 	
-	public void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException {
+	public void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException, EasyModeWin {
 		String errMsg;
 		if (this.isBlocked) {
 			errMsg = "ERR: it's not your turn";
@@ -89,11 +89,17 @@ public class SimplePlayer implements Runnable{
 			throw new UnplayableHoleException(errMsg);
 		}
 		
-		int index = this.getBoard().distribute(holeIndex);	
 		if (moveIsStarvingEnemy(holeIndex)) {
-			System.out.println("Move is starving the enemy");
-			return;
+			// Check if we are in the situation of the rule number 8
+			if (this.hasWon()) {
+				System.out.println("Easy mode win !");
+				throw new EasyModeWin("");
+			}
+			errMsg = "ERR: move is starving the enemy";
+			throw new UnplayableHoleException(errMsg);
 		}
+		
+		int index = this.getBoard().distribute(holeIndex);	
 		takeSeeds(index);
 	}
 	
@@ -142,9 +148,22 @@ public class SimplePlayer implements Runnable{
 	}
 	
 	public boolean hasWon() {
-		if (!this.getBoard().isBeginnerDifficulty()) {
-			return this.getBoard().getSeeds() <= 6 && this.getSeedsInArea() == 0;
+		if (this.getBoard().isBeginnerDifficulty()) {
+			if (this.getBoard().getSeeds() > 6) {
+				return false;
+			}
+			
+			if (this.getPlayerNumber() == 1) {
+				if (this.getBoard().getPlayerTwo().getSeedsInArea() == 0) {
+					return true;
+				}
+			}else {
+				if (this.getBoard().getPlayerOne().getSeedsInArea() == 0) {
+					return true;
+				}
+			}
 		}
+		
 		return this.granary.getSeeds() >= 25;
 	}
 	
@@ -227,6 +246,10 @@ public class SimplePlayer implements Runnable{
 	
 	public int getScore() {
 		return score;
+	}
+	
+	public void setScore(int score) {
+		this.score = score;
 	}
 	
 	public void addPointToScore() {

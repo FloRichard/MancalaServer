@@ -14,6 +14,8 @@ public class ClientInputController {
 	private boolean isLoading;
 	private int p1Granary;
 	private int p2Granary;
+	private int p1Score;
+	private int p2Score;
 	private boolean isPlayer1Turn;
 	private int[] jsonBoardToLoad;
 
@@ -64,6 +66,11 @@ public class ClientInputController {
 			this.jsonBoardToLoad = new int[jArr.size()];
 			for (int i = 0; i < jArr.size(); i++) {
 				this.jsonBoardToLoad[i] = jArr.get(i).getAsInt();
+			}
+			this.p1Score = j.get("playerOneScore").getAsInt();
+			this.p2Score = j.get("playerTwoScore").getAsInt();
+			if (j.get("difficulty").getAsString().equals("easy")) {
+				this.isBeginnerDifficulty = true;
 			}
 		}
 	}
@@ -133,5 +140,20 @@ public class ClientInputController {
 		this.isPlayer1Turn = isPlayer1Turn;
 	}
 	
+	public int getP1Score() {
+		return p1Score;
+	}
+
+	public void setP1Score(int p1Score) {
+		this.p1Score = p1Score;
+	}
+
+	public int getP2Score() {
+		return p2Score;
+	}
+
+	public void setP2Score(int p2Score) {
+		this.p2Score = p2Score;
+	}
 	
 }

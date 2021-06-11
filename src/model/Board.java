@@ -41,10 +41,7 @@ public class Board implements Cloneable{
 			return;
 		}
 		
-		if (request.isDifficultyChoice()) {
- 			if (request.isBeginnerDifficulty()) {
- 				this.setBeginnerDifficulty(true);
- 			}
+		if (request.isDifficultyChoice() && request.isBeginnerDifficulty()) {
  			return;
  		}
 		
@@ -56,29 +53,25 @@ public class Board implements Cloneable{
 				out.println(e.getMessage());
 				System.out.println(e.getMessage());
 				return;
+			} catch (EasyModeWin e) {
+				if (handleWin(player)) {
+					return;
+				}
 			}
  			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove()));
  			out.println(getBoardToJSONString(this));
  			return;
  		}
 		
-		if (request.isAConfirmation()) {
- 			if (request.getConfirmationAction().equals("abort")) {
- 				player.setBoard(player.getLastMove().clone());
- 				System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove()));
-	 			out.println(getBoardToJSONString(this));	
-	 			return;
- 			}
+		if (request.isAConfirmation() && request.getConfirmationAction().equals("abort")) {
+			player.setBoard(player.getLastMove().clone());
+			System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove()));
+ 			out.println(getBoardToJSONString(this));
+ 			return;
  		}
 		
-		if (player.hasWon()) {
-			this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
-			player.addPointToScore();
-			this.addARound();
-			if (this.getNumberOfRoundPlayed() == 6) {
-				gameOver(player.getPlayerNumber());
-				return;
-			}
+		if (player.hasWon() && handleWin(player) ) {
+			return;
 	 	}
 		
 		if (this.isNullGame()) {
@@ -96,18 +89,38 @@ public class Board implements Cloneable{
 		player.setBlocked(true);
 	}
 	
+	// Return true is the game is over (if 6 round has been played)
+	public boolean handleWin(SimplePlayer player) {
+		this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
+		player.addPointToScore();
+		this.addARound();
+		if (this.getNumberOfRoundPlayed() == 6) {
+			System.out.println("Game is over !");
+			gameOver(player.getPlayerNumber());
+			return true;
+		}
+		return false;
+	}
+	
 	public void loadFromRequest(ClientInputController request){
 		for (int i = 0; i<this.getHoles().size(); i++) {
 			this.getHoles().get(i).setSeeds(request.getJsonBoardToLoad()[i]);
 		}
 		this.playerOne.getGranary().setSeeds(request.getP1Granary());
 		this.playerTwo.getGranary().setSeeds(request.getP2Granary());
+		this.getPlayerOne().setScore(request.getP1Score());
+		this.getPlayerTwo().setScore(request.getP2Score());
+		this.setNumberOfRoundPlayed(request.getP1Score() + request.getP2Score());
 		if (request.isPlayer1Turn()) {
 			this.getPlayerOne().setBlocked(false);
 			this.getPlayerTwo().setBlocked(true);
 		}else {
 			this.getPlayerOne().setBlocked(true);
 			this.getPlayerTwo().setBlocked(false);
+		}
+		
+		if (request.isBeginnerDifficulty()) {
+				this.setBeginnerDifficulty(true);
 		}
 	}
 	
@@ -137,7 +150,6 @@ public class Board implements Cloneable{
 			outOne.println(msg);
 			outTwo.println(msg);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -192,10 +204,13 @@ public class Board implements Cloneable{
 		}else {
 			if (getPlayerTwo().getScore() > 3) {
 				outputMessagePlayerTwo = getGameWinJSONString();
+				outputMessagePlayerOne = getGameLoseJSONString();
 			}else if (getPlayerTwo().getScore() == 3) {
 				outputMessagePlayerTwo = getGameNullJSONString();
+				outputMessagePlayerOne = getGameNullJSONString();
 			}else {
 				outputMessagePlayerTwo = getGameLoseJSONString();
+				outputMessagePlayerOne = getGameWinJSONString();
 			}
 		}
 		outOne.println(outputMessagePlayerOne);
@@ -222,7 +237,7 @@ public class Board implements Cloneable{
 		
 		String boardJSON = "{\"seeds\":"+JSONHoles+
 				",\"playerOneGranaryCount\":"+b.getPlayerOne().getGranary().getSeeds()+
-				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"} ";
+				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"}";
 		return boardJSON;
 	}
 	
@@ -269,6 +284,10 @@ public class Board implements Cloneable{
 	
 	public int getNumberOfRoundPlayed() {
 		return numberOfRoundPlayed;
+	}
+	
+	public void setNumberOfRoundPlayed(int nbRound) {
+		this.numberOfRoundPlayed = nbRound;
 	}
 
 	public void addARound() {
