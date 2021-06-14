@@ -3,11 +3,8 @@ package model;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-
-import com.google.gson.Gson;
 
 
 public class SimplePlayer implements Runnable{
@@ -63,7 +60,6 @@ public class SimplePlayer implements Runnable{
 				break;
 			}
 			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
-			
 		}
 		
 	}
@@ -94,16 +90,16 @@ public class SimplePlayer implements Runnable{
 		}
 		
 		if (!moveIsFeedingEnemy(holeIndex)) {
-			errMsg = "ERR: move is not feeding enemy";
-			throw new UnplayableHoleException(errMsg);
-		}
-		
-		if (moveIsStarvingEnemy(holeIndex)) {
 			// Check if we are in the situation of the rule number 8
 			if (this.hasWon()) {
 				System.out.println("Easy mode win !");
 				throw new EasyModeWin("");
 			}
+			errMsg = "ERR: move is not feeding enemy";
+			throw new UnplayableHoleException(errMsg);
+		}
+		
+		if (moveIsStarvingEnemy(holeIndex)) {
 			errMsg = "ERR: move is starving the enemy";
 			throw new UnplayableHoleException(errMsg);
 		}
@@ -134,6 +130,8 @@ public class SimplePlayer implements Runnable{
 	
 	/**
 	 * Check if the move is feeding the enemy or not.
+	 * The move is feeding the area if the enemy area is not empty or if the played hole
+	 * contains enough seeds to reach enemy area
 	 * @param playedHoleIndex
 	 * @return true if the move is feeding the enemy
 	 */
@@ -151,23 +149,22 @@ public class SimplePlayer implements Runnable{
 		return true;
 	}
 	
+	/**
+	 * Check if the move is starving the enemy.
+	 * The move is starving the enemy if it takes all the seeds of the enemy.
+	 * @param playedHoleIndex
+	 * @return
+	 */
 	private boolean moveIsStarvingEnemy(int playedHoleIndex) {
-		int cpt = 0;
 		Board clonedBoard = this.getBoard().clone();
 		clonedBoard.distribute(playedHoleIndex);
 		
-		int lastIndex = 11;
-		while(clonedBoard.getHoles().get(lastIndex).isRetrievable() && !isInArea(lastIndex) || clonedBoard.getHoles().get(lastIndex).getSeeds() == 0 && lastIndex >5) {
-			cpt++;
-			lastIndex--;
+		for(int i=this.getEnemy().startIndexArea; i<=this.getEnemy().endIndexArea; i++) {
+			if (clonedBoard.getHoles().get(i).getSeeds() != 0) {
+				return false;
+			}
 		}
-		
-		if (cpt == 6) {
-			System.out.println("Starving move : you can't take seeds");
-			return true;
-		}
-		
-		return false;
+		return true;
 	}
 	
 	public boolean hasWon() {
@@ -212,6 +209,10 @@ public class SimplePlayer implements Runnable{
 		return nbSeedsInArea;
 	}
 	
+	/**
+	 * Get the enemy of this player
+	 * @return the player enemy
+	 */
 	public SimplePlayer getEnemy() {
 		if (this.playerNumber == 1 ) {
 			return this.getBoard().getPlayerTwo();

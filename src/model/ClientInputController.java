@@ -170,6 +170,4 @@ public class ClientInputController {
 	public void setNewGame(boolean isNewGame) {
 		this.isNewGame = isNewGame;
 	}
-
-	
 }

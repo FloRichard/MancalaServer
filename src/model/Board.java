@@ -2,7 +2,6 @@ package model;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 
@@ -22,6 +21,12 @@ public class Board implements Cloneable{
 		this.isFull = false;
 	}
 	
+	/**
+	 * Set playerOne and playerTwo of the board.
+	 * The first player to connect to the server will be the playerOne.
+	 * @param player the player that will be set.
+	 * @return the number of the player (1 or 2)
+	 */
 	public int setPlayer(SimplePlayer player) {
 		if (playerOne == null) {
 			this.playerOne = player;
@@ -35,16 +40,17 @@ public class Board implements Cloneable{
 		}
 	}
 	
+	/**
+	 * Function that is used as a controller of clients input.
+	 * It is called by each player when they want to interact with the server.
+	 * @param player the player that is playing.
+	 * @param input the input of the player.
+	 * @param out the output stream of the player.
+	 */
 	public void handleATurn(SimplePlayer player, String input, PrintWriter out) {
 		ClientInputController request = new ClientInputController(input);
 		if (request.isNewGame()) {
-			ArrayList<Hole> holes = new ArrayList<Hole>();
-			for(int i =0;i<12;i++) {
-				 Hole newH = new Hole(4);
-				 holes.add(newH);
-			}
-			this.setHoles(holes);
-			this.emptyGranaries();
+			emptyBoard();
 		}
 		
 		if (request.isLoading()) {
@@ -84,12 +90,19 @@ public class Board implements Cloneable{
  			return;
  		}
 		
-		if (player.hasWon() && handleWin(player) ) {
-			return;
+		if (player.hasWon()) {
+			if(handleWin(player)) {
+				return;
+			}
 	 	}
 		
-		if (this.isNullGame()) {
-			this.broadcastMsg("Match nul");
+		if (this.isNullRound()) {
+			player.addPointToScore();
+			player.getEnemy().addPointToScore();
+			this.addARound();
+			handleWin(player);
+			
+			this.broadcastMsg(this.getGameNullJSONString());
 		}
 		
 		this.broadcastMsg(getBoardToJSONString(this));
@@ -103,7 +116,11 @@ public class Board implements Cloneable{
 		player.setBlocked(true);
 	}
 	
-	// Return true if the game is over (if 6 round has been played)
+	/**
+	 * Handle the end of a round and check if the game is over.
+	 * @param player the player that is playing.
+	 * @return Returns true if the game is over.
+	 */
 	public boolean handleWin(SimplePlayer player) {
 		this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
 		player.addPointToScore();
@@ -113,9 +130,15 @@ public class Board implements Cloneable{
 			gameOver(player.getPlayerNumber());
 			return true;
 		}
+		emptyBoard();
 		return false;
 	}
 	
+	/**
+	 * Load a board from the client request.
+	 * It repopulates every elements of the board.
+	 * @param request the request sent by the client.
+	 */
 	public void loadFromRequest(ClientInputController request){
 		for (int i = 0; i<this.getHoles().size(); i++) {
 			this.getHoles().get(i).setSeeds(request.getJsonBoardToLoad()[i]);
@@ -138,6 +161,11 @@ public class Board implements Cloneable{
 		}
 	}
 	
+	/**
+	 * Distribute seeds from the played hole.
+	 * @param holeIndex the hole played by the player
+	 * @return the index of the hole where the last seed goes.
+	 */
 	public int distribute(int holeIndex) {
 		int nbSeeds = this.getHoles().get(holeIndex).getSeeds();
 		this.getHoles().get(holeIndex).removeSeeds();
@@ -157,6 +185,10 @@ public class Board implements Cloneable{
 		return index;
 	}
 	
+	/**
+	 * Send a message to both players.
+	 * @param msg the msg to send to players
+	 */
 	public void broadcastMsg(String msg) {
 		try {
 			PrintWriter outOne = new PrintWriter(this.getPlayerOne().getSocket().getOutputStream(), true);
@@ -184,13 +216,22 @@ public class Board implements Cloneable{
 		}
 	}
 	
-	public boolean isNullGame() {
+	/**
+	 * Check if the round is a null.
+	 * @return true if the round is null.
+	 */
+	public boolean isNullRound() {
 		if (this.getSeeds() < 6) {
 			return this.getPlayerOne().getGranary().getSeeds() <= 24  && this.getPlayerTwo().getGranary().getSeeds() <= 24;
 		}
 		return false;
 	}
 	
+	/**
+	 * Handles the end of a game, when 6 round has been played.
+	 * It sends appropriate messages to each player regarding if the match is null, won or lose.
+	 * @param playerNumber the player that end the game by playing.
+	 */
 	public void gameOver(int playerNumber) {
 		String outputMessagePlayerOne = null;
 		String outputMessagePlayerTwo = null;
@@ -231,6 +272,10 @@ public class Board implements Cloneable{
 		outTwo.println(outputMessagePlayerTwo);
 	}
 	
+	/**
+	 * Get the total number of seeds in board holes(excepted granaries)
+	 * @return the number of seeds in the board.
+	 */
 	public int getSeeds() {
 		int nbSeed = 0;
 		for (Hole hole : holes) {
@@ -239,11 +284,32 @@ public class Board implements Cloneable{
 		return nbSeed;
 	}
 	
+	/**
+	 * Empty the board by reseting holes and granaries.
+	 */
+	public void emptyBoard() {
+		ArrayList<Hole> holes = new ArrayList<Hole>();
+		for(int i =0;i<12;i++) {
+			 Hole newH = new Hole(4);
+			 holes.add(newH);
+		}
+		this.setHoles(holes);
+		this.emptyGranaries();
+	}
+	
+	/**
+	 * Empty both player's granaries.
+	 */
 	public void emptyGranaries() {
 		this.getPlayerOne().getGranary().removeSeeds();
 		this.getPlayerTwo().getGranary().removeSeeds();
 	}
 	
+	/**
+	 * Creates a JSON string representation of the actual board.
+	 * @param b the board to represent in JSON.
+	 * @return the JSON string.
+	 */
 	public static String getBoardToJSONString(Board b) {
 		String JSONHoles = "[";
 		for (int i = 0; i< b.getHoles().size();i++) {
