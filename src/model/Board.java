@@ -11,12 +11,15 @@ public class Board implements Cloneable{
 	private SimplePlayer playerOne;
 	private SimplePlayer playerTwo;
 	private boolean isBeginnerDifficulty;
+	private boolean isFull;
+
 	private int numberOfRoundPlayed;
 
 	public Board(ArrayList<Hole> holes) {
 		this.holes = holes;
 		this.numberOfRoundPlayed = 0;
 		this.isBeginnerDifficulty = true; // default difficulty
+		this.isFull = false;
 	}
 	
 	public int setPlayer(SimplePlayer player) {
@@ -27,12 +30,23 @@ public class Board implements Cloneable{
 		}else {
 			this.playerTwo = player;
 			this.playerTwo.setBlocked(true);
+			this.isFull = true;
 			return 2;
 		}
 	}
 	
 	public void handleATurn(SimplePlayer player, String input, PrintWriter out) {
 		ClientInputController request = new ClientInputController(input);
+		if (request.isNewGame()) {
+			ArrayList<Hole> holes = new ArrayList<Hole>();
+			for(int i =0;i<12;i++) {
+				 Hole newH = new Hole(4);
+				 holes.add(newH);
+			}
+			this.setHoles(holes);
+			this.emptyGranaries();
+		}
+		
 		if (request.isLoading()) {
 			System.out.println("Loading a board...");
 			this.loadFromRequest(request);
@@ -89,7 +103,7 @@ public class Board implements Cloneable{
 		player.setBlocked(true);
 	}
 	
-	// Return true is the game is over (if 6 round has been played)
+	// Return true if the game is over (if 6 round has been played)
 	public boolean handleWin(SimplePlayer player) {
 		this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
 		player.addPointToScore();
@@ -225,6 +239,11 @@ public class Board implements Cloneable{
 		return nbSeed;
 	}
 	
+	public void emptyGranaries() {
+		this.getPlayerOne().getGranary().removeSeeds();
+		this.getPlayerTwo().getGranary().removeSeeds();
+	}
+	
 	public static String getBoardToJSONString(Board b) {
 		String JSONHoles = "[";
 		for (int i = 0; i< b.getHoles().size();i++) {
@@ -240,7 +259,7 @@ public class Board implements Cloneable{
 				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"}";
 		return boardJSON;
 	}
-	
+
 	public String getGameWinJSONString() {
 		return "{\"info\":\"win\"}";
 	}
@@ -292,6 +311,14 @@ public class Board implements Cloneable{
 
 	public void addARound() {
 		this.numberOfRoundPlayed++;
+	}
+	
+	public boolean isFull() {
+		return isFull;
+	}
+
+	public void setFull(boolean isFull) {
+		this.isFull = isFull;
 	}
 	
 	public Board clone() {

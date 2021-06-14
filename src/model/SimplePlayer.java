@@ -59,6 +59,7 @@ public class SimplePlayer implements Runnable{
 			} catch(NoSuchElementException e) {
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
 				this.getBoard().informEnemyOfDisconnection(playerNumber);
+				this.getBoard().setFull(false);
 				break;
 			}
 			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
@@ -67,6 +68,14 @@ public class SimplePlayer implements Runnable{
 		
 	}
 	
+	/**
+	 * Function that handle a move from this player. It checks if every rules
+	 * of the game are respected. If not it throws exceptions.
+	 * @param holeIndex The index of the hole played by the player.
+	 * @throws UnplayableHoleException Thrown when the played hole is not in the player area, or when the move is starving or not feeding the enemy.
+	 * @throws NotYourTurnException Thrown when the player send a move but it is not his turn.
+	 * @throws EasyModeWin Thrown when player has win in easy mode.
+	 */
 	public void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException, EasyModeWin {
 		String errMsg;
 		if (this.isBlocked) {
@@ -103,6 +112,14 @@ public class SimplePlayer implements Runnable{
 		takeSeeds(index);
 	}
 	
+	
+	/**
+	 * Function that will take seeds from enemy area.
+	 * It takes seeds only if the last hole contains 2 or 3 seeds.
+	 * Then it goes backward and check if holes have 2 or 3 seeds.
+	 * It stops at the first hole that contains more than 3 seeds.
+	 * @param index index of the last hole where a seeds has been dropped off.
+	 */
 	private void takeSeeds(int index) {
 		while(this.getBoard().getHoles().get(index).isRetrievable() && !isInArea(index)) {
 			if (index < 0) {
@@ -114,8 +131,14 @@ public class SimplePlayer implements Runnable{
 		}
 	}
 	
+	
+	/**
+	 * Check if the move is feeding the enemy or not.
+	 * @param playedHoleIndex
+	 * @return true if the move is feeding the enemy
+	 */
 	private boolean moveIsFeedingEnemy(int playedHoleIndex) {
-		for(int i=this.startIndexArea; i<=this.endIndexArea; i++) {
+		for(int i=this.getEnemy().startIndexArea; i<=this.getEnemy().endIndexArea; i++) {
 			if (this.getBoard().getHoles().get(i).getSeeds() != 0) {
 				return true;
 			}
@@ -167,10 +190,19 @@ public class SimplePlayer implements Runnable{
 		return this.granary.getSeeds() >= 25;
 	}
 	
+	/**
+	 * Check if the hole played is in the playable area of the player.
+	 * @param holeIndex index of the played hole.
+	 * @return return true if the hole is in the player area.
+	 */
 	private boolean isInArea(int holeIndex) {
 		return this.startIndexArea <= holeIndex && this.endIndexArea >= holeIndex;
 	}
 	
+	/**
+	 * Calculate the number of seeds contained in the area of the player.
+	 * @return number of seeds contained in player area.
+	 */
 	public int getSeedsInArea() {
 		int nbSeedsInArea = 0;
 		for(int i=this.startIndexArea; i<=this.endIndexArea; i++) {
@@ -178,6 +210,14 @@ public class SimplePlayer implements Runnable{
 		}
 		
 		return nbSeedsInArea;
+	}
+	
+	public SimplePlayer getEnemy() {
+		if (this.playerNumber == 1 ) {
+			return this.getBoard().getPlayerTwo();
+		}else {
+			return this.getBoard().getPlayerOne();
+		}
 	}
 	
 	public Granary getGranary() {

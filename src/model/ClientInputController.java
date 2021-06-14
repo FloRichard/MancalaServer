@@ -18,6 +18,7 @@ public class ClientInputController {
 	private int p2Score;
 	private boolean isPlayer1Turn;
 	private int[] jsonBoardToLoad;
+	private boolean isNewGame;
 
 	private String rawJSONInput;
 	
@@ -28,6 +29,7 @@ public class ClientInputController {
 		isBeginnerDifficulty = false;
 		isLoading = false;
 		this.isPlayer1Turn = true;
+		this.isNewGame = false;
 		this.rawJSONInput = rawJSONInput;
 		this.parseRawJsonInput();
 	}
@@ -72,6 +74,10 @@ public class ClientInputController {
 			if (j.get("difficulty").getAsString().equals("easy")) {
 				this.isBeginnerDifficulty = true;
 			}
+		}
+		
+		if (type.equals("new")) {
+			this.isNewGame = true;
 		}
 	}
 
@@ -155,5 +161,15 @@ public class ClientInputController {
 	public void setP2Score(int p2Score) {
 		this.p2Score = p2Score;
 	}
+	
+
+	public boolean isNewGame() {
+		return isNewGame;
+	}
+
+	public void setNewGame(boolean isNewGame) {
+		this.isNewGame = isNewGame;
+	}
+
 	
 }
