@@ -23,7 +23,7 @@ public class Board implements Cloneable{
 	public Board(ArrayList<Hole> holes) {
 		this.holes = holes;
 		this.numberOfRoundPlayed = 0;
-		this.isBeginnerDifficulty = true; // default difficulty
+		this.isBeginnerDifficulty = false; // default difficulty
 		this.isFull = false;
 	}
 	
@@ -106,7 +106,7 @@ public class Board implements Cloneable{
 			player.addPointToScore();
 			player.getEnemy().addPointToScore();
 			
-			// Add to rounds when the match is null because each player won one point.
+			// Add to rounds when the match is null because each player wins one point.
 			this.addARound();
 			this.addARound();
 			if (this.getNumberOfRoundPlayed() == 6) {
@@ -132,7 +132,8 @@ public class Board implements Cloneable{
 	 * @return Returns true if the game is over.
 	 */
 	public boolean handleWin(SimplePlayer player) {
-		this.broadcastMsg("Le joueur "+player.getPlayerNumber()+" a gagné la manche");
+		player.getOutPut().println(this.getWinJSONStringOn(ROUND));
+		player.getEnemy().getOutPut().println(this.getLoseJSONStringOn(ROUND));
 		player.addPointToScore();
 		this.addARound();
 		if (this.getNumberOfRoundPlayed() == 6) {
@@ -366,7 +367,6 @@ public class Board implements Cloneable{
         	clonedBoard = (Board) super.clone();
 		
 		} catch (CloneNotSupportedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         clonedBoard.setHoles(clonedHoles);

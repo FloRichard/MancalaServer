@@ -173,6 +173,8 @@ public class SimplePlayer implements Runnable{
 	 * @return true is the round is won.
 	 */
 	public boolean hasWon() {
+		System.out.println("grananry count = "+this.granary.getSeeds());
+		System.out.println(this.getBoard().isBeginnerDifficulty());
 		if (this.getBoard().isBeginnerDifficulty()) {
 			if (this.getBoard().getSeeds() > 6) {
 				return false;
