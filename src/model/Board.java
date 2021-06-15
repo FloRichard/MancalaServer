@@ -36,11 +36,19 @@ public class Board implements Cloneable{
 	public int setPlayer(SimplePlayer player) {
 		if (playerOne == null) {
 			this.playerOne = player;
-			this.playerOne.setBlocked(false);
 			return 1;
 		}else {
+			int firstPlayerToPlay = 1 + (int)(Math.random() * ((3 - 1) + 1));
+			
 			this.playerTwo = player;
-			this.playerTwo.setBlocked(true);
+			if (firstPlayerToPlay == 1) {
+				this.playerOne.setBlocked(false);
+				this.playerTwo.setBlocked(true);
+			}else {
+				this.playerOne.setBlocked(true);
+				this.playerTwo.setBlocked(false);
+			}
+			
 			this.isFull = true;
 			return 2;
 		}

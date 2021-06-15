@@ -69,7 +69,15 @@ public class SimplePlayer implements Runnable{
 	}
 	
 	private void init() {
-		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+"}");
+		while(!this.getBoard().isFull()) {
+			
+		}
+		boolean isBeginning= false;
+		if (this.isBlocked) {
+			isBeginning = true;
+		}
+		System.out.println("");
+		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+isBeginning+"}");
 	}
 	
 	/**
