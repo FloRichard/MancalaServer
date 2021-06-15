@@ -67,8 +67,12 @@ public class Board implements Cloneable{
 			return;
 		}
 		
-		if (request.isDifficultyChoice() && request.isBeginnerDifficulty()) {
- 			return;
+		if (request.isDifficultyChoice()) {
+			if (request.isBeginnerDifficulty()) {
+				this.setBeginnerDifficulty(true);
+			}else {
+				this.setBeginnerDifficulty(false);
+			}
  		}
 		
 		if (request.isAMove()){
@@ -116,7 +120,7 @@ public class Board implements Cloneable{
 			}else {
 				emptyBoard();
 			}
-			this.broadcastMsg(this.getNullJSONStringOn(ROUND));
+			this.broadcastMsg(this.getDrawJSONStringOn(ROUND));
 		}
 		
 		this.broadcastMsg(getBoardToJSONString(this));
@@ -232,8 +236,8 @@ public class Board implements Cloneable{
 			player.getOutPut().println(getWinJSONStringOn(GAME));
 			player.getEnemy().getOutPut().println(getLoseJSONStringOn(GAME));
 		}else if (player.getScore() == 3) {
-			player.getOutPut().println(getNullJSONStringOn(GAME));
-			player.getEnemy().getOutPut().println(getNullJSONStringOn(GAME));
+			player.getOutPut().println(getDrawJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getDrawJSONStringOn(GAME));
 		}else {
 			player.getOutPut().println(getLoseJSONStringOn(GAME));
 			player.getEnemy().getOutPut().println(getWinJSONStringOn(GAME));
@@ -288,22 +292,22 @@ public class Board implements Cloneable{
 		}
 		JSONHoles += "]";
 		
-		String boardJSON = "{\"seeds\":"+JSONHoles+
+		String boardJSON = "{\"type\":\"board\",\"seeds\":"+JSONHoles+
 				",\"playerOneGranaryCount\":"+b.getPlayerOne().getGranary().getSeeds()+
 				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"}";
 		return boardJSON;
 	}
 
-	public String getWinJSONStringOn(String winType) {
-		return "{\"type\":\"info\",\"value\":\"win\",\"on\":"+winType+"}";
+	public String getWinJSONStringOn(String target) {
+		return "{\"type\":\"info\",\"value\":\"win\",\"target\":"+target+"}";
 	}
 	
-	public String getLoseJSONStringOn(String loseType) {
-		return "{\"type\":\"info\",\"value\":\"lose\",\"on\":"+loseType+"}";
+	public String getLoseJSONStringOn(String target) {
+		return "{\"type\":\"info\",\"value\":\"lose\",\"target\":"+target+"}";
 	}
 	
-	public String getNullJSONStringOn(String nullType) {
-		return "{\"type\":\"info\",\"value\":\"null\",\"on\":"+nullType+"}";
+	public String getDrawJSONStringOn(String target) {
+		return "{\"type\":\"info\",\"value\":\"draw\",\"target\":"+target+"}";
 	}
 	
 	public ArrayList<Hole> getHoles() {
