@@ -14,6 +14,9 @@ public class Board implements Cloneable{
 	private SimplePlayer playerTwo;
 	private boolean isBeginnerDifficulty;
 	private boolean isFull;
+	
+	private final String ROUND = "round";
+	private final String GAME = "game";
 
 	private int numberOfRoundPlayed;
 
@@ -50,7 +53,7 @@ public class Board implements Cloneable{
 	 * @param input the input of the player.
 	 * @param out the output stream of the player.
 	 */
-	public void handleATurn(SimplePlayer player, String input, PrintWriter out) {
+	public void handleATurn(SimplePlayer player, String input) {
 		ClientInputController request = new ClientInputController(input);
 		if (request.isNewGame()) {
 			emptyBoard();
@@ -73,7 +76,7 @@ public class Board implements Cloneable{
  			try {
 				player.playAMove(request.getHoleIndexPlayed());
 			} catch (UnplayableHoleException | NotYourTurnException e) {
-				out.println(e.getMessage());
+				player.getOutPut().println(e.getMessage());
 				System.out.println(e.getMessage());
 				return;
 			} catch (EasyModeWin e) {
@@ -82,14 +85,14 @@ public class Board implements Cloneable{
 				}
 			}
  			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove()));
- 			out.println(getBoardToJSONString(this));
+ 			player.getOutPut().println(getBoardToJSONString(this));
  			return;
  		}
 		
 		if (request.isAConfirmation() && request.getConfirmationAction().equals("abort")) {
 			player.setBoard(player.getLastMove().clone());
 			System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove()));
- 			out.println(getBoardToJSONString(this));
+			player.getOutPut().println(getBoardToJSONString(this));
  			return;
  		}
 		
@@ -108,22 +111,18 @@ public class Board implements Cloneable{
 			this.addARound();
 			if (this.getNumberOfRoundPlayed() == 6) {
 				System.out.println("Game is over !");
-				gameOver(player.getPlayerNumber());
+				gameOver(player);
 				return;
 			}else {
 				emptyBoard();
 			}
-			this.broadcastMsg(this.getGameNullJSONString());
+			this.broadcastMsg(this.getNullJSONStringOn(ROUND));
 		}
 		
 		this.broadcastMsg(getBoardToJSONString(this));
 		
-		if (player.getPlayerNumber() == 1) {
-			this.getPlayerTwo().setBlocked(false);
-		}else {
-			this.getPlayerOne().setBlocked(false);
-		}
-		
+		// Unlocking the enemy, locking the actual player.
+		player.getEnemy().setBlocked(false);
 		player.setBlocked(true);
 	}
 	
@@ -138,7 +137,7 @@ public class Board implements Cloneable{
 		this.addARound();
 		if (this.getNumberOfRoundPlayed() == 6) {
 			System.out.println("Game is over !");
-			gameOver(player.getPlayerNumber());
+			gameOver(player);
 			return true;
 		}
 		emptyBoard();
@@ -211,22 +210,6 @@ public class Board implements Cloneable{
 		}
 	}
 	
-	public void informEnemyOfDisconnection(int playerNumber) {
-		String disconnectionMsg = "ERR: player "+ playerNumber + " has left. You won.";
-		try {
-			if (playerNumber == 1) {
-				PrintWriter outTwo = new PrintWriter(this.getPlayerTwo().getSocket().getOutputStream(), true);
-				outTwo.println(disconnectionMsg);
-			}else {
-				PrintWriter outOne = new PrintWriter(this.getPlayerOne().getSocket().getOutputStream(), true);
-				outOne.println(disconnectionMsg);
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	/**
 	 * Check if the round is a null.
 	 * @return true if the round is null.
@@ -243,44 +226,17 @@ public class Board implements Cloneable{
 	 * It sends appropriate messages to each player regarding if the match is null, won or lose.
 	 * @param playerNumber the player that end the game by playing.
 	 */
-	public void gameOver(int playerNumber) {
-		String outputMessagePlayerOne = null;
-		String outputMessagePlayerTwo = null;
-		PrintWriter outOne = null;
-		PrintWriter outTwo = null;
-		try {
-			outOne = new PrintWriter(this.getPlayerOne().getSocket().getOutputStream(), true);
-			outTwo = new PrintWriter(this.getPlayerTwo().getSocket().getOutputStream(), true);
-		} catch (IOException e) {
-			System.err.println("Can't get output streams");
-			e.printStackTrace();
-		}
-		
-		if (playerNumber == this.getPlayerOne().getPlayerNumber()) {
-			if (getPlayerOne().getScore() > 3) {
-				outputMessagePlayerOne = getGameWinJSONString();
-				outputMessagePlayerTwo = getGameLoseJSONString();
-			}else if (getPlayerOne().getScore() == 3) {
-				outputMessagePlayerOne = getGameNullJSONString();
-				outputMessagePlayerTwo = getGameNullJSONString();
-			}else {
-				outputMessagePlayerOne = getGameLoseJSONString();
-				outputMessagePlayerTwo = getGameWinJSONString();
-			}
+	public void gameOver(SimplePlayer player) {	
+		if (player.getScore() > 3) {
+			player.getOutPut().println(getWinJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getLoseJSONStringOn(GAME));
+		}else if (player.getScore() == 3) {
+			player.getOutPut().println(getNullJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getNullJSONStringOn(GAME));
 		}else {
-			if (getPlayerTwo().getScore() > 3) {
-				outputMessagePlayerTwo = getGameWinJSONString();
-				outputMessagePlayerOne = getGameLoseJSONString();
-			}else if (getPlayerTwo().getScore() == 3) {
-				outputMessagePlayerTwo = getGameNullJSONString();
-				outputMessagePlayerOne = getGameNullJSONString();
-			}else {
-				outputMessagePlayerTwo = getGameLoseJSONString();
-				outputMessagePlayerOne = getGameWinJSONString();
-			}
+			player.getOutPut().println(getLoseJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getWinJSONStringOn(GAME));
 		}
-		outOne.println(outputMessagePlayerOne);
-		outTwo.println(outputMessagePlayerTwo);
 	}
 	
 	/**
@@ -337,16 +293,16 @@ public class Board implements Cloneable{
 		return boardJSON;
 	}
 
-	public String getGameWinJSONString() {
-		return "{\"info\":\"win\"}";
+	public String getWinJSONStringOn(String winType) {
+		return "{\"type\":\"info\",\"value\":\"win\",\"on\":"+winType+"}";
 	}
 	
-	public String getGameLoseJSONString() {
-		return "{\"info\":\"lose\"}";
+	public String getLoseJSONStringOn(String loseType) {
+		return "{\"type\":\"info\",\"value\":\"lose\",\"on\":"+loseType+"}";
 	}
 	
-	public String getGameNullJSONString() {
-		return "{\"info\":\"null\"}";
+	public String getNullJSONStringOn(String nullType) {
+		return "{\"type\":\"info\",\"value\":\"null\",\"on\":"+nullType+"}";
 	}
 	
 	public ArrayList<Hole> getHoles() {

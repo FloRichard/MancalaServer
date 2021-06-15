@@ -12,6 +12,7 @@ import exception.UnplayableHoleException;
 
 public class SimplePlayer implements Runnable{
 	private Socket socket;
+	private PrintWriter outPut;
 	private Board board;
 	private Board LastMove;
 	private Granary granary;
@@ -46,19 +47,19 @@ public class SimplePlayer implements Runnable{
 			try {
 				
 				Scanner in = new Scanner(socket.getInputStream());
-				PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
+				this.outPut = new PrintWriter(this.socket.getOutputStream(), true);
 				String input = in.next();
 				System.out.println(input);
 				System.out.println("Player "+this.playerNumber+" is playing");
 				//System.out.println("\tActual board :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
 	    	 	
-	    	 	this.getBoard().handleATurn(this, input, out);
+	    	 	this.getBoard().handleATurn(this, input);
 	    	 
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch(NoSuchElementException e) {
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
-				this.getBoard().informEnemyOfDisconnection(playerNumber);
+				this.getBoard().broadcastMsg("{\"type\":\"info\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
 				this.getBoard().setFull(false);
 				break;
 			}
@@ -105,7 +106,6 @@ public class SimplePlayer implements Runnable{
 		takeSeeds(index);
 	}
 	
-	
 	/**
 	 * Function that will take seeds from enemy area.
 	 * It takes seeds only if the last hole contains 2 or 3 seeds.
@@ -123,7 +123,6 @@ public class SimplePlayer implements Runnable{
 			index--;
 		}
 	}
-	
 	
 	/**
 	 * Check if the move is feeding the enemy or not.
@@ -164,20 +163,22 @@ public class SimplePlayer implements Runnable{
 		return true;
 	}
 	
+	/**
+	 * Check if the player has won the round regarding the difficulty.
+	 * If the difficulty is set to beginner, then a round is won when the total
+	 * number of seeds is lower than 6 and if the enemy has no seeds in its area.
+	 * If the difficulty is set to normal, the round is win when the player has more than 24 seeds
+	 * in its granary.
+	 * Normal difficulty win conditions is also applied to easy mode.
+	 * @return true is the round is won.
+	 */
 	public boolean hasWon() {
 		if (this.getBoard().isBeginnerDifficulty()) {
 			if (this.getBoard().getSeeds() > 6) {
 				return false;
 			}
-			
-			if (this.getPlayerNumber() == 1) {
-				if (this.getBoard().getPlayerTwo().getSeedsInArea() == 0) {
-					return true;
-				}
-			}else {
-				if (this.getBoard().getPlayerOne().getSeedsInArea() == 0) {
-					return true;
-				}
+			if (this.getEnemy().getSeedsInArea() == 0) {
+				return true;
 			}
 		}
 		
@@ -282,6 +283,14 @@ public class SimplePlayer implements Runnable{
 		this.socket = socket;
 	}
 	
+	public PrintWriter getOutPut() {
+		return outPut;
+	}
+
+	public void setOutPut(PrintWriter outPut) {
+		this.outPut = outPut;
+	}
+	
 	public int getScore() {
 		return score;
 	}
@@ -294,4 +303,5 @@ public class SimplePlayer implements Runnable{
 		this.score++;
 	}
 
+	
 }
