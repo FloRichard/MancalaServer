@@ -6,6 +6,9 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import exception.NotYourTurnException;
+import exception.UnplayableHoleException;
+
 
 public class SimplePlayer implements Runnable{
 	private Socket socket;
@@ -73,20 +76,16 @@ public class SimplePlayer implements Runnable{
 	 * @throws EasyModeWin Thrown when player has win in easy mode.
 	 */
 	public void playAMove(int holeIndex) throws UnplayableHoleException, NotYourTurnException, EasyModeWin {
-		String errMsg;
 		if (this.isBlocked) {
-			errMsg = "ERR: it's not your turn";
-			throw new NotYourTurnException(errMsg);
+			throw new NotYourTurnException();
 		}
 		
 		if (!isInArea(holeIndex)) {
-			errMsg = "ERR: this hole is not in your area";
-			throw new UnplayableHoleException(errMsg);
+			throw new UnplayableHoleException(UnplayableHoleException.NotYourAreaErr);
 		}
 		
 		if (this.getBoard().getHoles().get(holeIndex).getSeeds() == 0) {
-			errMsg = "ERR: Empty hole";
-			throw new UnplayableHoleException(errMsg);
+			throw new UnplayableHoleException(UnplayableHoleException.EmptyHoleErr);
 		}
 		
 		if (!moveIsFeedingEnemy(holeIndex)) {
@@ -95,13 +94,11 @@ public class SimplePlayer implements Runnable{
 				System.out.println("Easy mode win !");
 				throw new EasyModeWin("");
 			}
-			errMsg = "ERR: move is not feeding enemy";
-			throw new UnplayableHoleException(errMsg);
+			throw new UnplayableHoleException(UnplayableHoleException.MoveIsNotFeedingErr);
 		}
 		
 		if (moveIsStarvingEnemy(holeIndex)) {
-			errMsg = "ERR: move is starving the enemy";
-			throw new UnplayableHoleException(errMsg);
+			throw new UnplayableHoleException(UnplayableHoleException.MoveIsStarvingErr);
 		}
 		
 		int index = this.getBoard().distribute(holeIndex);	

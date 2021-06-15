@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import exception.NotYourTurnException;
+import exception.UnplayableHoleException;
+
 
 public class Board implements Cloneable{
 	private ArrayList<Hole> holes;
@@ -99,9 +102,17 @@ public class Board implements Cloneable{
 		if (this.isNullRound()) {
 			player.addPointToScore();
 			player.getEnemy().addPointToScore();
-			this.addARound();
-			handleWin(player);
 			
+			// Add to rounds when the match is null because each player won one point.
+			this.addARound();
+			this.addARound();
+			if (this.getNumberOfRoundPlayed() == 6) {
+				System.out.println("Game is over !");
+				gameOver(player.getPlayerNumber());
+				return;
+			}else {
+				emptyBoard();
+			}
 			this.broadcastMsg(this.getGameNullJSONString());
 		}
 		
