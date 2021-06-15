@@ -61,7 +61,7 @@ public class SimplePlayer implements Runnable{
 	    	 	this.getBoard().handleATurn(this, input);
 			} catch(NoSuchElementException e) {
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
-				this.getBoard().broadcastMsg("{\"type\":\"info\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
+				this.getBoard().broadcastMsg("{\"type\":\"error\",\"value\":\"error.player1.disconnection\"}");
 				this.getBoard().setFull(false);
 				this.getBoard().emptyBoard();
 				break;
