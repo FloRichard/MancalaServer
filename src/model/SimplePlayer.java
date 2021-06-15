@@ -77,7 +77,7 @@ public class SimplePlayer implements Runnable{
 		if (this.isBlocked) {
 			isBeginning = true;
 		}
-		System.out.println("");
+		System.out.println("Le board n'est plus plein walou");
 		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+isBeginning+"}");
 	}
 	
