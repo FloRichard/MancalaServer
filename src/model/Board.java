@@ -38,7 +38,7 @@ public class Board implements Cloneable{
 			this.playerOne = player;
 			return 1;
 		}else {
-			int firstPlayerToPlay = 1 + (int)(Math.random() * ((3 - 1) + 1));
+			int firstPlayerToPlay = 1 + (int)(Math.random() * ((2 - 1) + 1));
 			
 			this.playerTwo = player;
 			if (firstPlayerToPlay == 1) {
