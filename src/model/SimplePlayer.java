@@ -25,15 +25,16 @@ public class SimplePlayer implements Runnable{
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
+		
+		
+		this.granary = new Granary(0);
+		this.socket = socket;
 		try {
-			this.in = new Scanner(socket.getInputStream());
+			this.in = new Scanner(this.socket.getInputStream());
 			this.outPut = new PrintWriter(this.socket.getOutputStream(), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		this.granary = new Granary(0);
-		this.socket = socket;
 		this.board = board;
 		this.playerNumber = board.setPlayer(this);
 		if (playerNumber == 1) {
