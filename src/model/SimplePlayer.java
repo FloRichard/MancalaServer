@@ -63,6 +63,7 @@ public class SimplePlayer implements Runnable{
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
 				this.getBoard().broadcastMsg("{\"type\":\"info\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
 				this.getBoard().setFull(false);
+				this.getBoard().emptyBoard();
 				break;
 			}
 			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
