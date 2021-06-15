@@ -13,6 +13,7 @@ import exception.UnplayableHoleException;
 public class SimplePlayer implements Runnable{
 	private Socket socket;
 	private PrintWriter outPut;
+	private Scanner in;
 	private Board board;
 	private Board LastMove;
 	private Granary granary;
@@ -24,6 +25,13 @@ public class SimplePlayer implements Runnable{
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
+		try {
+			this.in = new Scanner(socket.getInputStream());
+			this.outPut = new PrintWriter(this.socket.getOutputStream(), true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		this.granary = new Granary(0);
 		this.socket = socket;
 		this.board = board;
@@ -43,20 +51,13 @@ public class SimplePlayer implements Runnable{
 
 	@Override
 	public void run() {
+		init();
 		while(true) {
 			try {
-				
-				Scanner in = new Scanner(socket.getInputStream());
-				this.outPut = new PrintWriter(this.socket.getOutputStream(), true);
-				String input = in.next();
+				String input = this.in.next();
 				System.out.println(input);
 				System.out.println("Player "+this.playerNumber+" is playing");
-				//System.out.println("\tActual board :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
-	    	 	
 	    	 	this.getBoard().handleATurn(this, input);
-	    	 
-			} catch (IOException e) {
-				e.printStackTrace();
 			} catch(NoSuchElementException e) {
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
 				this.getBoard().broadcastMsg("{\"type\":\"info\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
@@ -65,7 +66,10 @@ public class SimplePlayer implements Runnable{
 			}
 			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
 		}
-		
+	}
+	
+	private void init() {
+		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+"}");
 	}
 	
 	/**
