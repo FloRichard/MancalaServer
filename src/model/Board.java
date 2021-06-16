@@ -48,8 +48,6 @@ public class Board implements Cloneable{
 				this.playerOne.setBlocked(true);
 				this.playerTwo.setBlocked(false);
 			}
-			System.out.println("p1b ="+this.playerOne.isBlocked()+"p2b ="+this.playerTwo.isBlocked());
-			
 			this.isFull = true;
 			return 2;
 		}
@@ -64,6 +62,7 @@ public class Board implements Cloneable{
 	 */
 	public void handleATurn(SimplePlayer player, String input) {
 		ClientInputController request = new ClientInputController(input);
+		System.out.println("\tactual board\n\t\t"+ getBoardToJSONString(this, player, true));
 		if (request.isNewGame()) {
 			emptyBoard();
 		}
@@ -90,7 +89,9 @@ public class Board implements Cloneable{
  		}
 		
 		if (request.isAMove()){
- 			player.setLastMove(this.clone());
+			//TODO cloning granary
+			player.setLastMove(this.clone());
+			System.out.println("\tlastMove\n\t\t"+ getBoardToJSONString(player.getLastMove(), player, true));
  			try {
 				player.playAMove(request.getHoleIndexPlayed());
 			} catch (UnplayableHoleException | NotYourTurnException e) {
@@ -102,15 +103,16 @@ public class Board implements Cloneable{
 					return;
 				}
 			}
- 			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove(), player, true));
+ 			
  			player.getOutPut().println(getBoardToJSONString(this, player, true));
+ 			System.out.println("\tafter move\n\t\t"+ getBoardToJSONString(this, player, true));
  			return;
  		}
 		
 		if (request.isAConfirmation() && request.getConfirmationAction().equals("abort")) {
-			player.setBoard(player.getLastMove().clone());
-			System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove(), player, false));
-			player.getOutPut().println(getBoardToJSONString(player.getLastMove(), player, false));
+			player.setBoard(player.getLastMove());
+			System.out.println("\tAborting the move... Returning to :\n\t\t"+ getBoardToJSONString(player.getBoard(), player, true));
+			player.getOutPut().println(getBoardToJSONString(player.getBoard(), player, false));
  			return;
  		}
 		
@@ -137,11 +139,17 @@ public class Board implements Cloneable{
 			this.broadcastMsg(this.getDrawJSONStringOn(ROUND));
 		}
 		
+		System.out.println("Broadcasted board = "+ getBoardToJSONString(this, player, true));
+		player.setBoard(this);
+		player.getEnemy().setBoard(this);
 		this.broadcastMsg(getBoardToJSONString(this, player.getEnemy(), false));
+		
 		
 		// Unlocking the enemy, locking the actual player.
 		player.getEnemy().setBlocked(false);
-		player.setBlocked(true);
+		player.setBlocked(true);	
+		
+	
 	}
 	
 	/**
@@ -213,7 +221,6 @@ public class Board implements Cloneable{
 	public int distribute(int holeIndex) {
 		int nbSeeds = this.getHoles().get(holeIndex).getSeeds();
 		this.getHoles().get(holeIndex).removeSeeds();
-		
 		int index = holeIndex;
 		while(nbSeeds > 0) {
 			index++;

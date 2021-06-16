@@ -66,7 +66,6 @@ public class SimplePlayer implements Runnable{
 				handleDisconnection();
 				break;
 			}
-			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard(), this, false));
 		}
 	}
 	
@@ -122,13 +121,14 @@ public class SimplePlayer implements Runnable{
 	 * @param index index of the last hole where a seeds has been dropped off.
 	 */
 	private void takeSeeds(int index) {
+		System.out.println("index = "+index);
 		while(this.getBoard().getHoles().get(index).isRetrievable() && !isInArea(index)) {
-			if (index < 0) {
-				index = this.getBoard().getHoles().size() -1;
-			}
 			int nbSeedsInTheHole = this.getBoard().getHoles().get(index).retrieveSeeds();
 			this.granary.addSeeds(nbSeedsInTheHole);
 			index--;
+			if (index < 0) {
+				index = this.getBoard().getHoles().size() -1;
+			}
 		}
 	}
 	
@@ -161,8 +161,9 @@ public class SimplePlayer implements Runnable{
 	 */
 	private boolean moveIsStarvingEnemy(int playedHoleIndex) {
 		Board clonedBoard = this.getBoard().clone();
-		clonedBoard.distribute(playedHoleIndex);
-		
+		int lastIndex = clonedBoard.distribute(playedHoleIndex);
+		takeSeeds(lastIndex);
+		System.out.println("\t\tcloned board for starving = "+Board.getBoardToJSONString(clonedBoard, getEnemy(), isBlocked));
 		for(int i=this.getEnemy().startIndexArea; i<=this.getEnemy().endIndexArea; i++) {
 			if (clonedBoard.getHoles().get(i).getSeeds() != 0) {
 				return false;
