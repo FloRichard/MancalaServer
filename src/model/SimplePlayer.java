@@ -22,6 +22,8 @@ public class SimplePlayer implements Runnable{
 	private int endIndexArea;
 	private boolean isBlocked;
 	private int score;
+	private boolean isReadyToContinue;
+
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
@@ -229,7 +231,7 @@ public class SimplePlayer implements Runnable{
 	
 	
 	public void handleDisconnection() {
-		this.getBoard().broadcastMsg("{\"type\":\"error\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
+		this.getEnemy().getOutPut().println("{\"type\":\"error\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
 		this.getBoard().setFull(false);
 		if (this.playerNumber == 1) {
 			this.getBoard().setPlayerOne(null);
@@ -319,6 +321,22 @@ public class SimplePlayer implements Runnable{
 	
 	public void addPointToScore() {
 		this.score++;
+	}
+	
+	public boolean isReadyToContinue() {
+		return isReadyToContinue;
+	}
+
+	public void setReadyToContinue(boolean isReadyToContinue) {
+		this.isReadyToContinue = isReadyToContinue;
+	}
+
+	public Scanner getIn() {
+		return in;
+	}
+
+	public void setIn(Scanner in) {
+		this.in = in;
 	}
 
 	

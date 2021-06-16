@@ -145,6 +145,7 @@ public class Board implements Cloneable{
 	
 	/**
 	 * Handle the end of a round and check if the game is over.
+	 * This function wait for user confirmation to continue playing.
 	 * @param player the player that is playing.
 	 * @return Returns true if the game is over.
 	 */
@@ -158,6 +159,20 @@ public class Board implements Cloneable{
 			gameOver(player);
 			return true;
 		}
+		
+		// Blocking the server while both player aren't ready
+		while (!this.playerOne.isReadyToContinue() && !this.playerTwo.isReadyToContinue()) {
+			String input = player.getIn().next();
+			if (!player.isReadyToContinue()) {
+				player.setReadyToContinue(input.equals("continue"));
+			}
+			
+			input = player.getEnemy().getIn().next();
+			if (!player.getEnemy().isReadyToContinue()) {
+				player.getEnemy().setReadyToContinue(input.equals("continue"));
+			}
+		}
+		
 		emptyBoard();
 		return false;
 	}
@@ -307,20 +322,22 @@ public class Board implements Cloneable{
 		
 		String boardJSON = "{\"type\":\"board\",\"seeds\":"+JSONHoles+
 				",\"playerOneGranaryCount\":"+b.getPlayerOne().getGranary().getSeeds()+
-				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+"}";
+				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+
+				",\"playerOneScore\":"+b.getPlayerOne().getScore()+
+				",\"playerTwoScore\":"+b.getPlayerTwo().getScore()+"}";
 		return boardJSON;
 	}
 
 	public String getWinJSONStringOn(String target) {
-		return "{\"type\":\"info\",\"value\":\"win\",\"target\":"+target+"}";
+		return "{\"type\":\"info\",\"value\":\"info.win."+target+"\"}";
 	}
 	
 	public String getLoseJSONStringOn(String target) {
-		return "{\"type\":\"info\",\"value\":\"lose\",\"target\":"+target+"}";
+		return "{\"type\":\"info\",\"value\":\"info.lose."+target+"\"}";
 	}
 	
 	public String getDrawJSONStringOn(String target) {
-		return "{\"type\":\"info\",\"value\":\"draw\",\"target\":"+target+"}";
+		return "{\"type\":\"info\",\"value\":\"info.draw."+target+"\"}";
 	}
 	
 	public ArrayList<Hole> getHoles() {
