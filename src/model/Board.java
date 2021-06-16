@@ -48,6 +48,7 @@ public class Board implements Cloneable{
 				this.playerOne.setBlocked(true);
 				this.playerTwo.setBlocked(false);
 			}
+			System.out.println("p1b ="+this.playerOne.isBlocked()+"p2b ="+this.playerTwo.isBlocked());
 			
 			this.isFull = true;
 			return 2;
@@ -68,14 +69,14 @@ public class Board implements Cloneable{
 		}
 		
 		if (request.isReconnection()) {
-			player.getOutPut().println(getBoardToJSONString(this));
+			player.getOutPut().println(getBoardToJSONString(this, player, false));
 			return;
 		}
 		
 		if (request.isLoading()) {
 			System.out.println("Loading a board...");
 			this.loadFromRequest(request);
-			this.broadcastMsg(getBoardToJSONString(this));
+			this.broadcastMsg(getBoardToJSONString(this, player, false));
 			System.out.println("Board loaded !");
 			return;
 		}
@@ -101,15 +102,15 @@ public class Board implements Cloneable{
 					return;
 				}
 			}
- 			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove()));
- 			player.getOutPut().println(getBoardToJSONString(this));
+ 			System.out.println("lastMove "+ getBoardToJSONString(player.getLastMove(), player, true));
+ 			player.getOutPut().println(getBoardToJSONString(this, player, true));
  			return;
  		}
 		
 		if (request.isAConfirmation() && request.getConfirmationAction().equals("abort")) {
 			player.setBoard(player.getLastMove().clone());
-			System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove()));
-			player.getOutPut().println(getBoardToJSONString(this));
+			System.out.println("Aborting the move... Returning to"+ getBoardToJSONString(player.getLastMove(), player, false));
+			player.getOutPut().println(getBoardToJSONString(player.getLastMove(), player, false));
  			return;
  		}
 		
@@ -136,7 +137,7 @@ public class Board implements Cloneable{
 			this.broadcastMsg(this.getDrawJSONStringOn(ROUND));
 		}
 		
-		this.broadcastMsg(getBoardToJSONString(this));
+		this.broadcastMsg(getBoardToJSONString(this, player.getEnemy(), false));
 		
 		// Unlocking the enemy, locking the actual player.
 		player.getEnemy().setBlocked(false);
@@ -310,7 +311,7 @@ public class Board implements Cloneable{
 	 * @param b the board to represent in JSON.
 	 * @return the JSON string.
 	 */
-	public static String getBoardToJSONString(Board b) {
+	public static String getBoardToJSONString(Board b, SimplePlayer p, boolean confirmation) {
 		String JSONHoles = "[";
 		for (int i = 0; i< b.getHoles().size();i++) {
 			JSONHoles += b.getHoles().get(i).getSeeds();
@@ -324,7 +325,10 @@ public class Board implements Cloneable{
 				",\"playerOneGranaryCount\":"+b.getPlayerOne().getGranary().getSeeds()+
 				",\"playerTwoGranaryCount\":"+b.getPlayerTwo().getGranary().getSeeds()+
 				",\"playerOneScore\":"+b.getPlayerOne().getScore()+
-				",\"playerTwoScore\":"+b.getPlayerTwo().getScore()+"}";
+				",\"playerTwoScore\":"+b.getPlayerTwo().getScore()+
+				",\"playerNumber\":"+p.getPlayerNumber()+
+				",\"needConfirmation\":"+confirmation+
+				"}";
 		return boardJSON;
 	}
 

@@ -66,14 +66,14 @@ public class SimplePlayer implements Runnable{
 				handleDisconnection();
 				break;
 			}
-			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
+			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard(), this, false));
 		}
 	}
 	
 	private void init() {
 		while(!this.getBoard().isFull()) {};
-		System.out.println("Le board n'est plus plein walou "+this.playerNumber);
-		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+this.isBlocked+"}");
+		System.out.println("Le board n'est plein walou "+this.playerNumber);
+		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+!this.isBlocked+"}");
 	}
 	
 	/**
