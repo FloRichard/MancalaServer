@@ -1,19 +1,13 @@
 package server;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import model.Board;
-import model.Granary;
 import model.Hole;
-import model.Mancala;
-import model.Player;
 import model.SimplePlayer;
 
 public class Main {

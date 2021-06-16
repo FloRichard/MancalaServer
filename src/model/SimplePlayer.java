@@ -25,8 +25,6 @@ public class SimplePlayer implements Runnable{
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
-		
-		
 		this.granary = new Granary(0);
 		this.socket = socket;
 		try {
@@ -35,6 +33,7 @@ public class SimplePlayer implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 		this.board = board;
 		this.playerNumber = board.setPlayer(this);
 		if (playerNumber == 1) {
@@ -60,10 +59,9 @@ public class SimplePlayer implements Runnable{
 				System.out.println("Player "+this.playerNumber+" is playing");
 	    	 	this.getBoard().handleATurn(this, input);
 			} catch(NoSuchElementException e) {
-				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. Abandon de la partie");
-				this.getBoard().broadcastMsg("{\"type\":\"error\",\"value\":\"error.player1.disconnection\"}");
-				this.getBoard().setFull(false);
-				this.getBoard().emptyBoard();
+				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. En attente de reconnexion");
+				
+				handleDisconnection();
 				break;
 			}
 			System.out.println("\tBoard after playing :\n\t"+ Board.getBoardToJSONString(this.getBoard()));
@@ -71,15 +69,9 @@ public class SimplePlayer implements Runnable{
 	}
 	
 	private void init() {
-		while(!this.getBoard().isFull()) {
-			
-		}
-		boolean isBeginning= false;
-		if (this.isBlocked) {
-			isBeginning = true;
-		}
+		while(!this.getBoard().isFull()) {};
 		System.out.println("Le board n'est plus plein walou "+this.playerNumber);
-		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+isBeginning+"}");
+		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+this.isBlocked+"}");
 	}
 	
 	/**
@@ -235,6 +227,16 @@ public class SimplePlayer implements Runnable{
 		}
 	}
 	
+	
+	public void handleDisconnection() {
+		this.getBoard().broadcastMsg("{\"type\":\"error\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
+		this.getBoard().setFull(false);
+		if (this.playerNumber == 1) {
+			this.getBoard().setPlayerOne(null);
+		}else {
+			this.getBoard().setPlayerTwo(null);
+		}
+	}
 	public Granary getGranary() {
 		return this.granary;
 	}

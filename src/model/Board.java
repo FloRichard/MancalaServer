@@ -67,6 +67,11 @@ public class Board implements Cloneable{
 			emptyBoard();
 		}
 		
+		if (request.isReconnection()) {
+			player.getOutPut().println(getBoardToJSONString(this));
+			return;
+		}
+		
 		if (request.isLoading()) {
 			System.out.println("Loading a board...");
 			this.loadFromRequest(request);

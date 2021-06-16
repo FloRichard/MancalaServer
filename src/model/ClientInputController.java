@@ -7,10 +7,13 @@ import com.google.gson.JsonParser;
 public class ClientInputController {
 	private boolean isAMove;
 	private int holeIndexPlayed;
-	private String confirmationAction;
+	
 	private boolean isAConfirmation;
+	private String confirmationAction;
+	
 	private boolean isDifficultyChoice;
 	private boolean isBeginnerDifficulty;
+	
 	private boolean isLoading;
 	private int p1Granary;
 	private int p2Granary;
@@ -18,7 +21,10 @@ public class ClientInputController {
 	private int p2Score;
 	private boolean isPlayer1Turn;
 	private int[] jsonBoardToLoad;
+	
 	private boolean isNewGame;
+	
+	private boolean isReconnection;
 
 	private String rawJSONInput;
 	
@@ -28,6 +34,7 @@ public class ClientInputController {
 		isDifficultyChoice = false;
 		isBeginnerDifficulty = false;
 		isLoading = false;
+		isReconnection = false;
 		this.isPlayer1Turn = true;
 		this.isNewGame = false;
 		this.rawJSONInput = rawJSONInput;
@@ -78,6 +85,10 @@ public class ClientInputController {
 		
 		if (type.equals("new")) {
 			this.isNewGame = true;
+		}
+		
+		if (type.equals("reconnection")) {
+			this.isReconnection = true;
 		}
 	}
 
@@ -169,5 +180,13 @@ public class ClientInputController {
 
 	public void setNewGame(boolean isNewGame) {
 		this.isNewGame = isNewGame;
+	}
+	
+	public boolean isReconnection() {
+		return isReconnection;
+	}
+
+	public void setReconnection(boolean isReconnection) {
+		this.isReconnection = isReconnection;
 	}
 }
