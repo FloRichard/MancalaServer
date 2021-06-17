@@ -25,6 +25,8 @@ public class ClientInputController {
 	private boolean isNewGame;
 	
 	private boolean isReconnection;
+	
+	private boolean isEndRoundConfirmation;
 
 	private String rawJSONInput;
 	
@@ -37,10 +39,11 @@ public class ClientInputController {
 		isReconnection = false;
 		this.isPlayer1Turn = true;
 		this.isNewGame = false;
+		this.isEndRoundConfirmation = false;
 		this.rawJSONInput = rawJSONInput;
 		this.parseRawJsonInput();
 	}
-	
+
 	public void parseRawJsonInput() {
 		@SuppressWarnings("deprecation")
 		JsonObject jsonObject = new JsonParser().parse(rawJSONInput).getAsJsonObject();
@@ -89,6 +92,10 @@ public class ClientInputController {
 		
 		if (type.equals("reconnection")) {
 			this.isReconnection = true;
+		}
+		
+		if (type.equals("endRoundConfirmation")) {
+			this.isEndRoundConfirmation = true;
 		}
 	}
 
@@ -188,5 +195,13 @@ public class ClientInputController {
 
 	public void setReconnection(boolean isReconnection) {
 		this.isReconnection = isReconnection;
+	}
+	
+	public boolean isEndRoundConfirmation() {
+		return isEndRoundConfirmation;
+	}
+
+	public void setEndRoundConfirmation(boolean isEndRoundConfirmation) {
+		this.isEndRoundConfirmation = isEndRoundConfirmation;
 	}
 }

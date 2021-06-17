@@ -16,18 +16,23 @@ public class SimplePlayer implements Runnable{
 	private Scanner in;
 	private Board board;
 	private Board LastMove;
+	private int LastGranaryValue;
 	private Granary granary;
+	
 	private int playerNumber;
 	private int startIndexArea;
 	private int endIndexArea;
 	private boolean isBlocked;
 	private int score;
 	private boolean isReadyToContinue;
-
+	
+	private boolean isAksedToMakeANewGame;
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
 		this.granary = new Granary(0);
+		this.LastGranaryValue = 0;
+		this.score = 0;
 		this.socket = socket;
 		try {
 			this.in = new Scanner(this.socket.getInputStream());
@@ -46,7 +51,8 @@ public class SimplePlayer implements Runnable{
 			endIndexArea = 11;
 		}
 		
-		this.score = 0;
+		
+		this.isAksedToMakeANewGame = false ;
 
 		System.out.println("Ce joueur sera le joueur numéro " +this.playerNumber);
 	}
@@ -110,7 +116,7 @@ public class SimplePlayer implements Runnable{
 		}
 		
 		int index = this.getBoard().distribute(holeIndex);	
-		takeSeeds(index);
+		this.granary.addSeeds(takeSeeds(index, this.getBoard()));
 	}
 	
 	/**
@@ -120,16 +126,17 @@ public class SimplePlayer implements Runnable{
 	 * It stops at the first hole that contains more than 3 seeds.
 	 * @param index index of the last hole where a seeds has been dropped off.
 	 */
-	private void takeSeeds(int index) {
-		System.out.println("index = "+index);
-		while(this.getBoard().getHoles().get(index).isRetrievable() && !isInArea(index)) {
-			int nbSeedsInTheHole = this.getBoard().getHoles().get(index).retrieveSeeds();
-			this.granary.addSeeds(nbSeedsInTheHole);
+	private int takeSeeds(int index, Board b) {
+		int nbSeedsToAddIngranary = 0;
+		while(b.getHoles().get(index).isRetrievable() && !isInArea(index)) {
+			int nbSeedsInTheHole = b.getHoles().get(index).retrieveSeeds();
+			nbSeedsToAddIngranary += nbSeedsInTheHole;
 			index--;
 			if (index < 0) {
-				index = this.getBoard().getHoles().size() -1;
+				index = b.getHoles().size() -1;
 			}
 		}
+		return nbSeedsToAddIngranary;
 	}
 	
 	/**
@@ -162,7 +169,7 @@ public class SimplePlayer implements Runnable{
 	private boolean moveIsStarvingEnemy(int playedHoleIndex) {
 		Board clonedBoard = this.getBoard().clone();
 		int lastIndex = clonedBoard.distribute(playedHoleIndex);
-		takeSeeds(lastIndex);
+		takeSeeds(lastIndex, clonedBoard);
 		System.out.println("\t\tcloned board for starving = "+Board.getBoardToJSONString(clonedBoard, getEnemy(), isBlocked));
 		for(int i=this.getEnemy().startIndexArea; i<=this.getEnemy().endIndexArea; i++) {
 			if (clonedBoard.getHoles().get(i).getSeeds() != 0) {
@@ -232,7 +239,19 @@ public class SimplePlayer implements Runnable{
 	
 	
 	public void handleDisconnection() {
-		this.getEnemy().getOutPut().println("{\"type\":\"error\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
+		try {
+			this.getEnemy().getOutPut().println("{\"type\":\"error\",\"value\":\"error.player"+this.playerNumber+".disconnection\"}");
+			
+		}catch(NullPointerException e) {
+			System.out.println("Les deux joueurs sont déconnectés");
+			this.getBoard().emptyBoard();
+			this.getBoard().setFull(false);
+			if (this.playerNumber == 1) {
+				this.getBoard().setPlayerOne(null);
+			}else {
+				this.getBoard().setPlayerTwo(null);
+			}
+		}
 		this.getBoard().setFull(false);
 		if (this.playerNumber == 1) {
 			this.getBoard().setPlayerOne(null);
@@ -240,6 +259,7 @@ public class SimplePlayer implements Runnable{
 			this.getBoard().setPlayerTwo(null);
 		}
 	}
+		
 	public Granary getGranary() {
 		return this.granary;
 	}
@@ -339,6 +359,21 @@ public class SimplePlayer implements Runnable{
 	public void setIn(Scanner in) {
 		this.in = in;
 	}
+	
+	public int getLastGranaryValue() {
+		return LastGranaryValue;
+	}
 
+	public void setLastGranaryValue(int lastGranaryValue) {
+		LastGranaryValue = lastGranaryValue;
+	}
+	
+	public boolean isAksedToMakeANewGame() {
+		return isAksedToMakeANewGame;
+	}
+
+	public void setAksedToMakeANewGame(boolean isAksedToMakeANewGame) {
+		this.isAksedToMakeANewGame = isAksedToMakeANewGame;
+	}
 	
 }
