@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import exception.NotYourTurnException;
 import exception.UnplayableHoleException;
@@ -17,6 +18,7 @@ public class Board implements Cloneable{
 	private volatile boolean needEndRoundConfirmation;
 
 	public AtomicBoolean isNotFull;
+	public AtomicInteger readyForNewGame;
 	
 	private final String ROUND = "round";
 	private final String GAME = "game";
@@ -29,6 +31,7 @@ public class Board implements Cloneable{
 		this.isBeginnerDifficulty = false; // default difficulty
 		this.needEndRoundConfirmation = false;
 		this.isNotFull = new AtomicBoolean(true);
+		readyForNewGame = new AtomicInteger(0);
 	}
 	
 	/**
@@ -53,7 +56,7 @@ public class Board implements Cloneable{
 				this.playerTwo.setBlocked(false);
 			}
 //			this.playerOne.setBlocked(false);
-//			this.playerTwo.setBlocked(true);
+//		this.playerTwo.setBlocked(true);
 //			this.setNumberOfRoundPlayed(5);
 //			this.playerOne.setScore(3);
 //			this.playerTwo.setScore(2);
@@ -74,9 +77,9 @@ public class Board implements Cloneable{
 	 * @param out the output stream of the player.
 	 */
 	public void handleATurn(SimplePlayer player, String input) {
-		System.out.println("p2 svcore = "+this.playerTwo.getScore()+"  "+ player.getEnemy().getScore());
 		ClientInputController request = new ClientInputController(input);
-		System.out.println("\tactual board\n\t\t"+ getBoardToJSONString(this, player, true));
+		System.out.println(player.getPlayerNumber()+ "is blocked = "+player.isBlocked()+ " is ready to continue = "+player.isReadyToContinue());
+		//System.out.println("\tactual board\n\t\t"+ getBoardToJSONString(this, player, true));
 		if (request.isNewGame()) {
 			player.setReadyToContinue(true);
 			if (player.getEnemy().isReadyToContinue()) {
@@ -84,7 +87,11 @@ public class Board implements Cloneable{
 				player.setScore(0);
 				player.getEnemy().setScore(0);
 				this.setNumberOfRoundPlayed(0);
-				this.broadcastMsg( getBoardToJSONString(player.getBoard(), player, false));
+				this.readyForNewGame.set(0);
+				if(player.isBlocked())
+					this.broadcastMsg( getBoardToJSONString(player.getBoard(), player.getEnemy(), false));
+				else
+					this.broadcastMsg( getBoardToJSONString(player.getBoard(), player, false));
 				player.setReadyToContinue(false);
 				player.getEnemy().setReadyToContinue(false);
 			}
@@ -116,7 +123,7 @@ public class Board implements Cloneable{
 			//TODO cloning granary
 			player.setLastMove(this.clone());
 			player.setLastGranaryValue(player.getGranary().getSeeds());
-			System.out.println("\tlastMove\n\t\t"+ getBoardToJSONString(player.getLastMove(), player, true));
+			//System.out.println("\tlastMove\n\t\t"+ getBoardToJSONString(player.getLastMove(), player, true));
  			try {
 				player.playAMove(request.getHoleIndexPlayed());
 			} catch (UnplayableHoleException | NotYourTurnException e) {
@@ -124,13 +131,13 @@ public class Board implements Cloneable{
 				System.out.println(e.getMessage());
 				return;
 			} catch (EasyModeWin e) {
-				if (handleWin(player)) {
+				if (handleWin(player, false)) {
 					return;
 				}
 			}
  			
  			player.getOutPut().println(getBoardToJSONString(this, player, true));
- 			System.out.println("\tafter move\n\t\t"+ getBoardToJSONString(this, player, true));
+ 			//System.out.println("\tafter move\n\t\t"+ getBoardToJSONString(this, player, true));
  			return;
  		}
 		
@@ -153,9 +160,28 @@ public class Board implements Cloneable{
 			return;
 		}
 		
+		if (request.isSurrend()) {
+			player.getEnemy().getGranary().setSeeds(this.getSeeds());
+			for(int i=0; i<this.getHoles().size(); i++) {
+				this.getHoles().get(i).retrieveSeeds();
+			}
+			if(handleWin(player.getEnemy(), true)) {
+				return;
+			}
+			player.getEnemy().setBlocked(false);
+			player.setBlocked(true);
+			return;
+		}
+		
+		if(request.isReset()) {
+			this.readyForNewGame.addAndGet(1);
+			player.init(true);
+			return;
+		}
+		
 		if (player.hasWon()) {
-			System.out.println("C GAGNE WESH");
-			if(handleWin(player)) {
+			
+			if(handleWin(player, false)) {
 				return;
 			}
 	 	}
@@ -194,13 +220,18 @@ public class Board implements Cloneable{
 	 * Handle the end of a round and check if the game is over.
 	 * This function wait for user confirmation to continue playing.
 	 * @param player the player that is playing.
+	 * @param isSurrend specify if the win is by surrending.
 	 * @return Returns true if the game is over.
 	 */
-	public boolean handleWin(SimplePlayer player) {
+	public boolean handleWin(SimplePlayer player, boolean isSurrend) {
 		player.addPointToScore();
 		this.addARound();
+		System.out.println("nb of round played = "+this.getNumberOfRoundPlayed());
 		player.getEnemy().getOutPut().println(getBoardToJSONString(this, player.getEnemy(), false));
-		if (this.getNumberOfRoundPlayed() == 6) {
+		if (isSurrend) {
+			player.getOutPut().println(getBoardToJSONString(this, player.getEnemy(), false));
+		}
+		if ((Math.abs(player.getScore() - player.getEnemy().getScore()) >= 3 && this.getNumberOfRoundPlayed() >3) || (player.getScore() == 3 && player.getEnemy().getScore() == 3)) {
 			System.out.println("Game is over !");
 			gameOver(player);
 			return true;
@@ -209,9 +240,32 @@ public class Board implements Cloneable{
 		player.getOutPut().println(this.getWinJSONStringOn(ROUND));
 		player.getEnemy().getOutPut().println(this.getLoseJSONStringOn(ROUND));
 		
-		
 		this.needEndRoundConfirmation = true;
 		return false;
+	}
+	
+	/**
+	 * Handles the end of a game, when 6 round has been played.
+	 * It sends appropriate messages to each player regarding if the match is null, won or lose.
+	 * @param playerNumber the player that end the game by playing.
+	 */
+	public void gameOver(SimplePlayer player) {	
+		if (player.getScore() > 3) {
+			player.getOutPut().println(getWinJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getLoseJSONStringOn(GAME));
+		}else if (player.getScore() == 3) {
+			player.getOutPut().println(getDrawJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getDrawJSONStringOn(GAME));
+		}else {
+			player.getOutPut().println(getLoseJSONStringOn(GAME));
+			player.getEnemy().getOutPut().println(getWinJSONStringOn(GAME));
+		}
+		
+//		player.setBlocked(false);
+//		player.getEnemy().setBlocked(false);
+		player.setReadyToContinue(true);
+		player.getEnemy().setReadyToContinue(true);
+		//player.getEnemy().init(true);
 	}
 	
 	/**
@@ -290,23 +344,7 @@ public class Board implements Cloneable{
 		return false;
 	}
 	
-	/**
-	 * Handles the end of a game, when 6 round has been played.
-	 * It sends appropriate messages to each player regarding if the match is null, won or lose.
-	 * @param playerNumber the player that end the game by playing.
-	 */
-	public void gameOver(SimplePlayer player) {	
-		if (player.getScore() > 3) {
-			player.getOutPut().println(getWinJSONStringOn(GAME));
-			player.getEnemy().getOutPut().println(getLoseJSONStringOn(GAME));
-		}else if (player.getScore() == 3) {
-			player.getOutPut().println(getDrawJSONStringOn(GAME));
-			player.getEnemy().getOutPut().println(getDrawJSONStringOn(GAME));
-		}else {
-			player.getOutPut().println(getLoseJSONStringOn(GAME));
-			player.getEnemy().getOutPut().println(getWinJSONStringOn(GAME));
-		}
-	}
+
 	
 	/**
 	 * Get the total number of seeds in board holes(excepted granaries)
@@ -422,7 +460,8 @@ public class Board implements Cloneable{
 	}
 
 	public void addARound() {
-		this.numberOfRoundPlayed++;
+		this.numberOfRoundPlayed = this.numberOfRoundPlayed +1;
+		System.out.println("adding round = "+this.numberOfRoundPlayed);
 	}
 	
 	

@@ -30,6 +30,7 @@ public class SimplePlayer implements Runnable{
 
 	public SimplePlayer(Socket socket, Board board) {
 		System.out.println("Un joueur vient de se connecter");
+		this.isReadyToContinue = true;
 		this.granary = new Granary(0);
 		this.LastGranaryValue = 0;
 		this.score = 0;
@@ -59,7 +60,7 @@ public class SimplePlayer implements Runnable{
 
 	@Override
 	public void run() {
-		init();
+		init(false);
 		while(true) {
 			try {
 				String input = this.in.next();
@@ -82,22 +83,16 @@ public class SimplePlayer implements Runnable{
 		}
 	}
 	
-	private void init() {
-//		while(true) {
-//			if (!this.getBoard().isNotFull()) {
-//				break;
-//			}
-//		}
-
-			while(this.getBoard().isNotFull.get()) {
-				
+	public void init(boolean resetGame) {
+		if (resetGame) {
+			while(this.getBoard().readyForNewGame.get() != 2) {
+				//System.out.println(this.getBoard().readyForNewGame.get());
 			}
+			//this.getBoard().readyForNewGame.set(0);
+		}else
+			while(this.getBoard().isNotFull.get());
 		
-		
-			
-	
 		System.out.println("Le board est plein walou "+this.playerNumber);
-		//System.out.println("p"+this.playerNumber+" enemey"+this.getEnemy().getBoard().isNotFull());
 		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+!this.isBlocked+"}");
 	}
 	
@@ -209,8 +204,6 @@ public class SimplePlayer implements Runnable{
 	 * @return true is the round is won.
 	 */
 	public boolean hasWon() {
-		System.out.println("grananry count = "+this.granary.getSeeds());
-		System.out.println(this.getBoard().isBeginnerDifficulty());
 		if (this.getBoard().isBeginnerDifficulty()) {
 			if (this.getBoard().getSeeds() > 6) {
 				return false;

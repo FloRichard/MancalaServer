@@ -27,6 +27,8 @@ public class ClientInputController {
 	private boolean isReconnection;
 	
 	private boolean isEndRoundConfirmation;
+	private boolean isSurrend;
+	private boolean isReset;
 
 	private String rawJSONInput;
 	
@@ -37,6 +39,7 @@ public class ClientInputController {
 		isBeginnerDifficulty = false;
 		isLoading = false;
 		isReconnection = false;
+		this.isReset = false;
 		this.isPlayer1Turn = true;
 		this.isNewGame = false;
 		this.isEndRoundConfirmation = false;
@@ -96,6 +99,14 @@ public class ClientInputController {
 		
 		if (type.equals("endRoundConfirmation")) {
 			this.isEndRoundConfirmation = true;
+		}
+		
+		if (type.equals("surrend")) {
+			this.isSurrend = true;
+		}
+		
+		if (type.equals("reset")) {
+			this.isReset = true;
 		}
 	}
 
@@ -203,5 +214,21 @@ public class ClientInputController {
 
 	public void setEndRoundConfirmation(boolean isEndRoundConfirmation) {
 		this.isEndRoundConfirmation = isEndRoundConfirmation;
+	}
+	
+	public boolean isSurrend() {
+		return isSurrend;
+	}
+
+	public void setSurrend(boolean isSurrend) {
+		this.isSurrend = isSurrend;
+	}
+	
+	public boolean isReset() {
+		return isReset;
+	}
+
+	public void setReset(boolean isReset) {
+		this.isReset = isReset;
 	}
 }
