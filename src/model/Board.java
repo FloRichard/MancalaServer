@@ -3,6 +3,7 @@ package model;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import exception.NotYourTurnException;
 import exception.UnplayableHoleException;
@@ -13,9 +14,9 @@ public class Board implements Cloneable{
 	private SimplePlayer playerOne;
 	private SimplePlayer playerTwo;
 	private boolean isBeginnerDifficulty;
-	private boolean needEndRoundConfirmation;
+	private volatile boolean needEndRoundConfirmation;
 
-	private boolean isFull;
+	public AtomicBoolean isNotFull;
 	
 	private final String ROUND = "round";
 	private final String GAME = "game";
@@ -27,7 +28,7 @@ public class Board implements Cloneable{
 		this.numberOfRoundPlayed = 0;
 		this.isBeginnerDifficulty = false; // default difficulty
 		this.needEndRoundConfirmation = false;
-		this.isFull = false;
+		this.isNotFull = new AtomicBoolean(true);
 	}
 	
 	/**
@@ -60,7 +61,7 @@ public class Board implements Cloneable{
 			
 //			this.playerOne.getGranary().setSeeds(25);
 			
-			this.isFull = true;
+			this.isNotFull.set(false);
 			return 2;
 		}
 	}
@@ -424,13 +425,6 @@ public class Board implements Cloneable{
 		this.numberOfRoundPlayed++;
 	}
 	
-	public boolean isFull() {
-		return isFull;
-	}
-
-	public void setFull(boolean isFull) {
-		this.isFull = isFull;
-	}
 	
 	public boolean isNeedEndRoundConfirmation() {
 		return needEndRoundConfirmation;

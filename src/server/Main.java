@@ -36,8 +36,8 @@ public class Main {
 			 listener = new ServerSocket(59001);
 			 ExecutorService pool = Executors.newFixedThreadPool(500);
 			 while(true) {
-				 if (!board.isFull()) {
-					 System.out.println("waiting for connection...");
+				 if (board.isNotFull.get()) {
+					 System.out.println("waiting for connection... ");
 					 pool.execute(new SimplePlayer(listener.accept(), board));
 				 }
 			 }

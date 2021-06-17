@@ -70,14 +70,34 @@ public class SimplePlayer implements Runnable{
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. En attente de reconnexion");
 				
 				handleDisconnection();
+				try {
+					this.socket.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				Thread.currentThread().interrupt();
 				break;
 			}
 		}
 	}
 	
 	private void init() {
-		while(!this.getBoard().isFull()) {};
-		System.out.println("Le board n'est plein walou "+this.playerNumber);
+//		while(true) {
+//			if (!this.getBoard().isNotFull()) {
+//				break;
+//			}
+//		}
+
+			while(this.getBoard().isNotFull.get()) {
+				
+			}
+		
+		
+			
+	
+		System.out.println("Le board est plein walou "+this.playerNumber);
+		//System.out.println("p"+this.playerNumber+" enemey"+this.getEnemy().getBoard().isNotFull());
 		this.outPut.println("{\"type\":\"init\",\"playerNumber\":"+this.playerNumber+",\"isBeginning\":"+!this.isBlocked+"}");
 	}
 	
@@ -245,18 +265,24 @@ public class SimplePlayer implements Runnable{
 		}catch(NullPointerException e) {
 			System.out.println("Les deux joueurs sont déconnectés");
 			this.getBoard().emptyBoard();
-			this.getBoard().setFull(false);
+			this.getBoard().isNotFull.set(true);
 			if (this.playerNumber == 1) {
 				this.getBoard().setPlayerOne(null);
 			}else {
 				this.getBoard().setPlayerTwo(null);
 			}
 		}
-		this.getBoard().setFull(false);
+		this.getBoard().isNotFull.set(true);
 		if (this.playerNumber == 1) {
 			this.getBoard().setPlayerOne(null);
 		}else {
 			this.getBoard().setPlayerTwo(null);
+		}
+		try {
+			finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 		
