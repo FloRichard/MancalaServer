@@ -76,8 +76,7 @@ public class Player implements Runnable{
 		while(true) {
 			try {
 				String input = this.in.next();
-				System.out.println(input);
-				System.out.println("Player "+this.playerNumber+" is playing");
+				System.out.println("Player "+this.playerNumber+" is playing.\nRequest : "+input);
 	    	 	this.getBoard().handleATurn(this, input);
 			} catch(NoSuchElementException e) {
 				System.out.println("Le joueur "+this.playerNumber+" s'est déconnecté. En attente de reconnexion");
@@ -126,7 +125,6 @@ public class Player implements Runnable{
 		}
 		
 		if (this.getBoard().getHoles().get(holeIndex).getSeeds() == 0) {
-			System.out.println(this.getBoard());
 			throw new UnplayableHoleException(UnplayableHoleException.EmptyHoleErr);
 		}
 		

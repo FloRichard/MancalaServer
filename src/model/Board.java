@@ -103,7 +103,6 @@ public class Board implements Cloneable{
 	 * in ClientInputControllerDocumentation.
 	 * @param player the player that is actually playing.
 	 * @param input the request of the player.
-	 * @param out the output stream of the player.
 	 * @see ClientInputController
 	 */
 	public void handleATurn(Player player, String input) {
@@ -204,7 +203,6 @@ public class Board implements Cloneable{
 		}
 		
 		if (player.hasWon()) {
-			System.out.println("haswon");
 			if(handleWin(player, false)) {
 				return;
 				
@@ -286,7 +284,7 @@ public class Board implements Cloneable{
 	 * Handles the end of a game, when 6 round has been played.
 	 * It sends appropriate messages to each player regarding if the match is null, won or lose.
 	 * Write the score in the score File.
-	 * @param playerNumber the player that end the game by playing.
+	 * @param player the player that end the game by playing.
 	 */
 	public void gameOver(Player player) {	
 		String scoreToSend = saveScore(player);
@@ -340,9 +338,6 @@ public class Board implements Cloneable{
 				scoreToSend += "<li>" +score+"</li>"; 
 			}
 			scoreToSend += "</ol>";
-			System.out.println(scoreToSend);
-		
-			
 			reader.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -516,11 +511,9 @@ public class Board implements Cloneable{
 	}
 
 	public String getWinJSONStringOn(String target, String... scoreToSend) {
-		System.out.println("ah");
 		if (target.equals(GAME)) {
 			return "{\"type\":\"info\",\"value\":\"info.win."+target+"\",\"score\":\""+scoreToSend[0]+"\"}";
 		}
-		System.out.println("bh");
 		return "{\"type\":\"info\",\"value\":\"info.win."+target+"\"}";
 	}
 	
@@ -571,7 +564,6 @@ public class Board implements Cloneable{
 
 	public void addARound() {
 		this.numberOfRoundPlayed.addAndGet(1);
-		System.out.println("adding round = "+this.numberOfRoundPlayed);
 	}
 	
 	

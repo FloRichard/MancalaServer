@@ -9,7 +9,7 @@ import com.google.gson.JsonParser;
  * Clients send raw JSON, the controller parses it and indicates the type of the request.
  * Each type of request has specific associated data. 
  * The templates for json inputs is the following :
- * 		{"type":"<type of the request>", "<data\>"...}
+ * 		{"type":"type of the request", "data"...}
  * @author Florian RICHARD
  * @author Julien MONTEIL
  *

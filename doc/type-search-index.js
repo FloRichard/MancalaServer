@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes","u":"allclasses-index.html"},{"p":"model","l":"Board"},{"p":"model","l":"ClientInputController"},{"p":"model","l":"EasyModeWin"},{"p":"model","l":"Granary"},{"p":"model","l":"Hole"},{"p":"server","l":"Main"},{"p":"exception","l":"NotYourTurnException"},{"p":"model","l":"Player"},{"p":"exception","l":"UnplayableHoleException"}];updateSearchResults();
+typeSearchIndex = [{"l":"All Classes","u":"allclasses-index.html"},{"p":"model","l":"ClientInputController"}];updateSearchResults();
