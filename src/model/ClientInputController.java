@@ -70,21 +70,20 @@ public class ClientInputController {
 		
 		if (type.equals("load")) {
 			this.isLoading = true;
-			JsonObject j = jsonObject.get("board").getAsJsonObject();
-			this.p1Granary = j.get("playerOneGranaryCount").getAsInt();
-			this.p2Granary = j.get("playerTwoGranaryCount").getAsInt();
-			int playNumber = j.get("playerTurn").getAsInt();
+			this.p1Granary = jsonObject.get("playerOneGranaryCount").getAsInt();
+			this.p2Granary = jsonObject.get("playerTwoGranaryCount").getAsInt();
+			int playNumber = jsonObject.get("playerNumber").getAsInt();
 			if (playNumber != 1) {
 				this.isPlayer1Turn = false;
 			}
-			JsonArray jArr = j.get("seeds").getAsJsonArray();
+			JsonArray jArr = jsonObject.get("seeds").getAsJsonArray();
 			this.jsonBoardToLoad = new int[jArr.size()];
 			for (int i = 0; i < jArr.size(); i++) {
 				this.jsonBoardToLoad[i] = jArr.get(i).getAsInt();
 			}
-			this.p1Score = j.get("playerOneScore").getAsInt();
-			this.p2Score = j.get("playerTwoScore").getAsInt();
-			if (j.get("difficulty").getAsString().equals("easy")) {
+			this.p1Score = jsonObject.get("playerOneScore").getAsInt();
+			this.p2Score = jsonObject.get("playerTwoScore").getAsInt();
+			if (jsonObject.get("difficulty").getAsString().equals("easy")) {
 				this.isBeginnerDifficulty = true;
 			}
 		}

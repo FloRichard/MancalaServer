@@ -125,7 +125,7 @@ public class Board implements Cloneable{
 			}else {
 				this.setBeginnerDifficulty(false);
 			}
-			//return;
+			return;
  		}
 		
 		if (request.isAMove()){
@@ -242,8 +242,8 @@ public class Board implements Cloneable{
 	 */
 	public boolean handleWin(SimplePlayer player, boolean isSurrend) {
 		player.addPointToScore();
-		this.numberOfRoundPlayed.co
-		System.out.println("nb of round played = "+);
+		this.addARound();
+		System.out.println("nb of round played = "+this.numberOfRoundPlayed);
 		player.getEnemy().getOutPut().println(getBoardToJSONString(this, player.getEnemy(), false));
 		if (isSurrend) {
 			player.getOutPut().println(getBoardToJSONString(this, player.getEnemy(), false));
@@ -383,7 +383,7 @@ public class Board implements Cloneable{
 			this.getHoles().get(i).setSeeds(4);
 		}
 		this.emptyGranaries();
-		this.numberOfRoundPlayed.set(0);
+		//this.numberOfRoundPlayed.set(0);
 	}
 	
 	/**
