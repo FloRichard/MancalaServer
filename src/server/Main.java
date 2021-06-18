@@ -25,6 +25,7 @@ public class Main {
 			 listener = new ServerSocket(59001);
 			 ExecutorService pool = Executors.newFixedThreadPool(500);
 			 while(true) {
+				 // Blocking connection while the board is full.
 				 if (board.isNotFull.get()) {
 					 System.out.println("waiting for connection... ");
 					 pool.execute(new Player(listener.accept(), board));

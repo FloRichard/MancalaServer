@@ -163,7 +163,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Check if the move is feeding the enemy or not.
+	 * Checks if the move is feeding the enemy or not.
 	 * The move is feeding the area if the enemy area is not empty or if the played hole
 	 * contains enough seeds to reach enemy area
 	 * @param playedHoleIndex
@@ -184,7 +184,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Check if the move is starving the enemy.
+	 * Checks if the move is starving the enemy.
 	 * The move is starving the enemy if it takes all the seeds of the enemy.
 	 * @param playedHoleIndex
 	 * @return
@@ -202,7 +202,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Check if the player has won the round regarding the difficulty.
+	 * Checks if the player has won the round regarding the difficulty.
 	 * If the difficulty is set to beginner, then a round is won when the total
 	 * number of seeds is lower than 6 and if the enemy has no seeds in its area.
 	 * If the difficulty is set to normal, the round is win when the player has more than 24 seeds
@@ -224,7 +224,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Check if the hole played is in the playable area of the player.
+	 * Checks if the hole played is in the playable area of the player.
 	 * @param holeIndex index of the played hole.
 	 * @return return true if the hole is in the player area.
 	 */
@@ -233,7 +233,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Calculate the number of seeds contained in the area of the player.
+	 * Calculates the number of seeds contained in the area of the player.
 	 * @return number of seeds contained in player area.
 	 */
 	public int getSeedsInArea() {
@@ -246,7 +246,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Get the enemy of this player
+	 * Gets the enemy of this player
 	 * @return the player enemy
 	 */
 	public Player getEnemy() {
@@ -258,7 +258,7 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * handle player disconnection from the server.
+	 * Handles player disconnection from the server.
 	 * When one player leave, it sends to its enemy an error.
 	 * If both players are disconnected, the board can accept connections again.
 	 */

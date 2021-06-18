@@ -14,8 +14,8 @@ import exception.NotYourTurnException;
 import exception.UnplayableHoleException;
 
 /**
- * Main class of the game. This class represents the board and can handle request from incoming users.
- * Both player has the same reference of the board, and the board knows both players.
+ * Main class of the game. This class represents the board and can handle incoming requests from players.
+ * Both players has the same reference on the board, and the board knows both players.
  * 
  * @author Florian RICHARD
  * @author Julien MONTEIL
@@ -239,7 +239,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Handle the end of a round and check if the game is over.
+	 * Handles the end of a round and checks if the game is over.
 	 * This function will make the actual player and it's enemy waiting for a confirmation to continue playing.
 	 * @param player the player that is playing.
 	 * @param isSurrend specifies if the round has been won by surrending or not.
@@ -305,9 +305,10 @@ public class Board implements Cloneable{
 		
 	}
 	/**
-	 * save actual the winner number of seeds in score.txt file.
-	 * Return the sorted list of score
-	 * @param p
+	 * Saves actual the winner number of seeds in score.txt file.
+	 * Returns the sorted list of score
+	 * @param p the player that has won.
+	 * @return the sorted score list in HTML format.
 	 */
 	public String saveScore(Player p) {
 		String data = p.getNbSeedsWonInGame() + ":"+p.getName()+"\n";
@@ -347,7 +348,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Check if the round is a null.
+	 * Checks if the round is a null.
 	 * @return true if the round is null.
 	 */
 	public boolean isNullRound() {
@@ -358,7 +359,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Load a board from the client request.
+	 * Loads a board from the client request.
 	 * It repopulates every elements of the board.
 	 * @param request the request sent by the client.
 	 */
@@ -408,7 +409,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Send a message to both players.
+	 * Sends a message to both players.
 	 * @param msg the message to send to players.
 	 */
 	public void broadcastMsg(String msg) {
@@ -423,7 +424,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Get the total number of seeds in board holes(excepted granaries).
+	 * Gets the total number of seeds in board holes(excepted granaries).
 	 * @return the number of seeds in the board.
 	 */
 	public int getSeeds() {
@@ -436,7 +437,7 @@ public class Board implements Cloneable{
 	
 	/**
 	 * This function resets the board.
-	 * It set holes and granary to default values, set player's score and the number of round played to 0.
+	 * It set holes and granary to default values, set players' scores and the number of rounds played to 0.
 	 * The it set's readyForNewGame to 0, players will have to wait each other.
 	 * @param p the player that is playing.
 	 */
@@ -457,7 +458,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Empty the board by reseting holes and granaries.
+	 * Empties the board by reseting holes and granaries.
 	 */
 	public void emptyBoard() {
 		for(int i =0;i<12;i++) {
@@ -467,7 +468,7 @@ public class Board implements Cloneable{
 	}
 	
 	/**
-	 * Empty both players' granary.
+	 * Empties both players' granaries.
 	 */
 	public void emptyGranaries() {
 		if (this.getPlayerOne() != null) {
@@ -481,6 +482,8 @@ public class Board implements Cloneable{
 	/**
 	 * Creates a JSON string representation of the actual board.
 	 * @param b the board to represent in JSON.
+	 * @param p the player that is playing.
+	 * @param confirmation specifies if the player p need to confirm.
 	 * @return the JSON string.
 	 */
 	public static String getBoardToJSONString(Board b, Player p, boolean confirmation) {
