@@ -114,6 +114,7 @@ public class SimplePlayer implements Runnable{
 		}
 		
 		if (this.getBoard().getHoles().get(holeIndex).getSeeds() == 0) {
+			System.out.println(this.getBoard());
 			throw new UnplayableHoleException(UnplayableHoleException.EmptyHoleErr);
 		}
 		
@@ -125,13 +126,10 @@ public class SimplePlayer implements Runnable{
 			}
 			throw new UnplayableHoleException(UnplayableHoleException.MoveIsNotFeedingErr);
 		}
-		
-		if (moveIsStarvingEnemy(holeIndex)) {
-			throw new UnplayableHoleException(UnplayableHoleException.MoveIsStarvingErr);
-		}
-		
 		int index = this.getBoard().distribute(holeIndex);	
-		this.granary.addSeeds(takeSeeds(index, this.getBoard()));
+		if (!moveIsStarvingEnemy(holeIndex)) {
+			this.granary.addSeeds(takeSeeds(index, this.getBoard()));
+		}
 	}
 	
 	/**

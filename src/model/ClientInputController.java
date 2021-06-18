@@ -63,7 +63,7 @@ public class ClientInputController {
 		
 		if (type.equals("difficulty")) {
 			this.isDifficultyChoice = true;
-			if (jsonObject.get("action").getAsString().equals("easy")) {
+			if (jsonObject.get("value").getAsString().equals("easy")) {
 				this.isBeginnerDifficulty = true;
 			}
 		}
