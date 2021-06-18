@@ -4,16 +4,38 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+/**
+ * Class used to catch clients requests and making them understandable for the board. 
+ * Clients send raw JSON, the controller parses it and indicates the type of the request.
+ * Each type of request has specific associated data. 
+ * The templates for json inputs is the following :
+ * 		{"type":"<type of the request>", "<data\>"...}
+ * @author Florian RICHARD
+ * @author Julien MONTEIL
+ *
+ */
 public class ClientInputController {
+	/**
+	 * Indicates that the player has played.
+	 */
 	private boolean isAMove;
 	private int holeIndexPlayed;
 	
+	/**
+	 * Indicates that the player has confirmed his move.
+	 */
 	private boolean isAConfirmation;
 	private String confirmationAction;
 	
+	/**
+	 * Indicates that the player has set the difficulty of the game.
+	 */
 	private boolean isDifficultyChoice;
 	private boolean isBeginnerDifficulty;
 	
+	/**
+	 * Indicates that the player wants to load a game.
+	 */
 	private boolean isLoading;
 	private int p1Granary;
 	private int p2Granary;
@@ -22,14 +44,32 @@ public class ClientInputController {
 	private boolean isPlayer1Turn;
 	private int[] jsonBoardToLoad;
 	
+	/**
+	 * Indicates that the player wants to make a new game.
+	 */
 	private boolean isNewGame;
-	
-	private boolean isReconnection;
-	
+
+	private boolean isPlayerName;
+	private String playerName;
+
+	/**
+	 * Indicates that the player is ready to play the next round.
+	 */
 	private boolean isEndRoundConfirmation;
+	
+	/**
+	 * Indicates that the player is surrending this round.
+	 */
 	private boolean isSurrend;
+	
+	/**
+	 * Indicates that the player will wait for the other player.
+	 */
 	private boolean isReset;
 
+	/**
+	 * The JSON sent by the player.
+	 */
 	private String rawJSONInput;
 	
 	public ClientInputController(String rawJSONInput) {
@@ -37,8 +77,8 @@ public class ClientInputController {
 		isAMove = false;
 		isDifficultyChoice = false;
 		isBeginnerDifficulty = false;
+		this.isPlayerName = false;
 		isLoading = false;
-		isReconnection = false;
 		this.isReset = false;
 		this.isPlayer1Turn = true;
 		this.isNewGame = false;
@@ -47,6 +87,10 @@ public class ClientInputController {
 		this.parseRawJsonInput();
 	}
 
+	/**
+	 * Parse the JSON inputs and set the type of the request and its data
+	 * 
+	 */
 	public void parseRawJsonInput() {
 		@SuppressWarnings("deprecation")
 		JsonObject jsonObject = new JsonParser().parse(rawJSONInput).getAsJsonObject();
@@ -92,8 +136,9 @@ public class ClientInputController {
 			this.isNewGame = true;
 		}
 		
-		if (type.equals("reconnection")) {
-			this.isReconnection = true;
+		if (type.equals("name")) {
+			this.isPlayerName = true;
+			this.playerName = jsonObject.get("value").getAsString();
 		}
 		
 		if (type.equals("endRoundConfirmation")) {
@@ -199,14 +244,6 @@ public class ClientInputController {
 		this.isNewGame = isNewGame;
 	}
 	
-	public boolean isReconnection() {
-		return isReconnection;
-	}
-
-	public void setReconnection(boolean isReconnection) {
-		this.isReconnection = isReconnection;
-	}
-	
 	public boolean isEndRoundConfirmation() {
 		return isEndRoundConfirmation;
 	}
@@ -229,5 +266,20 @@ public class ClientInputController {
 
 	public void setReset(boolean isReset) {
 		this.isReset = isReset;
+	}
+	
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+	public boolean isPlayerName() {
+		return isPlayerName;
+	}
+
+	public void setPlayerName(boolean isPlayerName) {
+		this.isPlayerName = isPlayerName;
 	}
 }
