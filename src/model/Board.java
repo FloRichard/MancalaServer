@@ -371,7 +371,7 @@ public class Board implements Cloneable{
 	 * Loads a board from the client request.
 	 * It repopulates every elements of the board.
 	 * @param request the request sent by the client.
-	 * @throws CorruptedBoardException 
+	 * @throws CorruptedBoardException Throws this exception if the board is malformed.
 	 */
 	public void loadFromRequest(ClientInputController request) throws CorruptedBoardException{
 		for (int i = 0; i<this.getHoles().size(); i++) {

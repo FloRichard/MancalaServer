@@ -184,10 +184,10 @@ public class Player implements Runnable{
 	}
 	
 	/**
-	 * Checks if the move is starving the enemy.
-	 * The move is starving the enemy if it takes all the seeds of the enemy.
+	 * Checks if the move isn't starving the enemy.
+	 * The move isn't starving the enemy if it doesn't take all the seeds of the enemy.
 	 * @param lastHoleIndex
-	 * @return
+	 * @return true if the move isn't starving the enemy.
 	 */
 	private boolean moveIsNotStarvingEnemy(int lastHoleIndex) {
 		Board clonedBoard = this.getBoard().clone();		
