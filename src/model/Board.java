@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import exception.CorruptedBoardException;
 import exception.NotYourTurnException;
 import exception.UnplayableHoleException;
 
@@ -131,7 +132,12 @@ public class Board implements Cloneable{
 		if (request.isLoading()) {
 			System.out.println("Loading a board...");
 			this.resetBoard(player);
-			this.loadFromRequest(request);
+			try {
+				this.loadFromRequest(request);
+			} catch (CorruptedBoardException e) {
+				System.out.println(e);
+				player.getOutPut().println(e);
+			}
 			this.broadcastMsg(getBoardToJSONString(this, player, false));
 			System.out.println("Board loaded !");
 			return;
@@ -362,13 +368,18 @@ public class Board implements Cloneable{
 	 * Loads a board from the client request.
 	 * It repopulates every elements of the board.
 	 * @param request the request sent by the client.
+	 * @throws CorruptedBoardException 
 	 */
-	public void loadFromRequest(ClientInputController request){
+	public void loadFromRequest(ClientInputController request) throws CorruptedBoardException{
 		for (int i = 0; i<this.getHoles().size(); i++) {
 			this.getHoles().get(i).setSeeds(request.getJsonBoardToLoad()[i]);
 		}
 		this.playerOne.getGranary().setSeeds(request.getP1Granary());
 		this.playerTwo.getGranary().setSeeds(request.getP2Granary());
+		
+		if (this.getSeeds() + this.playerOne.getGranary().getSeeds() + this.playerTwo.getGranary().getSeeds() != 48) {
+			throw new  CorruptedBoardException();
+		}
 		this.getPlayerOne().setScore(request.getP1Score());
 		this.getPlayerTwo().setScore(request.getP2Score());
 		this.numberOfRoundPlayed.set(request.getP1Score() + request.getP2Score());
