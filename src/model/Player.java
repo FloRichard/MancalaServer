@@ -47,8 +47,7 @@ public class Player implements Runnable{
 		
 		this.granary = new Granary(0);
 		this.LastGranaryValue = 0;
-
-		
+	
 		this.score = 0;		
 		
 		this.board = board;
@@ -66,7 +65,6 @@ public class Player implements Runnable{
 		this.nbSeedsWonInGame = 0;
 		this.isReadyToContinue = true;
 
-		
 		System.out.println("Ce joueur sera le joueur numéro " +this.playerNumber);
 	}
 
