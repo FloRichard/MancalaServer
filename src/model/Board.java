@@ -138,7 +138,10 @@ public class Board implements Cloneable{
 				System.out.println(e);
 				player.getOutPut().println(e);
 			}
-			this.broadcastMsg(getBoardToJSONString(this, player, false));
+			if (request.isPlayer1Turn())
+				this.broadcastMsg(getBoardToJSONString(this, this.getPlayerOne(), false));
+			else
+				this.broadcastMsg(getBoardToJSONString(this, this.getPlayerTwo(), false));
 			System.out.println("Board loaded !");
 			return;
 		}

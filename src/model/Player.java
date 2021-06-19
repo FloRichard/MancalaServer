@@ -137,7 +137,7 @@ public class Player implements Runnable{
 			throw new UnplayableHoleException(UnplayableHoleException.MoveIsNotFeedingErr);
 		}
 		int index = this.getBoard().distribute(holeIndex);	
-		if (!moveIsStarvingEnemy(holeIndex)) {
+		if (moveIsNotStarvingEnemy(index)) {
 			this.granary.addSeeds(takeSeeds(index, this.getBoard()));
 		}
 	}
@@ -186,19 +186,18 @@ public class Player implements Runnable{
 	/**
 	 * Checks if the move is starving the enemy.
 	 * The move is starving the enemy if it takes all the seeds of the enemy.
-	 * @param playedHoleIndex
+	 * @param lastHoleIndex
 	 * @return
 	 */
-	private boolean moveIsStarvingEnemy(int playedHoleIndex) {
-		Board clonedBoard = this.getBoard().clone();
-		int lastIndex = clonedBoard.distribute(playedHoleIndex);
-		takeSeeds(lastIndex, clonedBoard);
+	private boolean moveIsNotStarvingEnemy(int lastHoleIndex) {
+		Board clonedBoard = this.getBoard().clone();		
+		takeSeeds(lastHoleIndex, clonedBoard);
 		for(int i=this.getEnemy().startIndexArea; i<=this.getEnemy().endIndexArea; i++) {
 			if (clonedBoard.getHoles().get(i).getSeeds() != 0) {
-				return false;
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 	
 	/**
